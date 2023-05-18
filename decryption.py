@@ -2,7 +2,7 @@ import string
 import numpy as np
 import itertools
 import  random
-
+letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
 population_size = 1000
 ###################### IMPORTANT ###########################
 # check if need a more relative path. 
@@ -12,17 +12,70 @@ def create_permutations():
     # create a list of dictionaries:
     permutations = []
     global population_size
-    counter=0
-    letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
-    letters_for_perm=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+    global letters
+    letters_for_perm = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
     for i in range(population_size):
         random.shuffle(letters_for_perm)
         dictionary = {}
-
         for j, letter in enumerate(letters):
             dictionary[letter] = letters_for_perm[j]
         permutations.append(dictionary)
     return permutations
+
+
+def mutation(dict_list):
+    global letters
+    for dictionary in dict_list:
+        # do the mutation over only 5 percent in the population:
+        if random.random() <= 0.05:
+            # choose 2 random letters:
+            letter_1 = random.choice(letters)
+            letter_2 = random.choice(letters)
+            while letter_2 == letter_1:
+                letter_2 = random.choice(letters)
+            # swap values between 2 keys:
+            temp = dictionary[letter_1]
+            dictionary[letter_1] = dictionary[letter_2]
+            dictionary[letter_2] = temp
+    return dict_list
+
+
+
+def crossover(dict_list):
+    # create a new list of dictionaries
+    crossover_results_list = []
+    # create indexes dict in order to ease the crossover:
+    global letters
+    indexes_dict = {}
+    for i in range(26):
+        indexes_dict[i] = letters[i]
+
+    # for each  pairs of dictionaries:
+    for i in range(0, len(dict_list), 2):
+        parent_1 = dict_list[i]
+        parent_2 = dict_list[i+1]
+        # create new dict that will be the child:
+        child = {}
+        # choose a random index in the dict (but not the edges):
+        r = random.randint(1, 24)
+        # insert to the child the first r values from the first parent:
+        for j in range(r):
+            key_for_child=indexes_dict[j]
+            child[key_for_child]=parent_1[key_for_child]
+        for k in range(r, 26, 1):
+            key_for_child = indexes_dict[k]
+            chosen_val = parent_2[key_for_child]
+            # make sure the value doesn't already exist in the child's dict:
+            while chosen_val in child.values():
+                random_letter = random.choice(letters)
+                chosen_val = random_letter
+            child[key_for_child] = chosen_val
+        crossover_results_list.append(child)
+    return crossover_results_list
+
+    # choose random index (bigger than 1)
+    # take the first part of the first dictionary until the index and than take the rest from the second dictionary
+
 
 # This function import and organize the helper files.
 def import_helper_files():
@@ -54,8 +107,8 @@ def import_helper_files():
     enc = text.split()
     return common_words, common_letters_dict, common_bigrams_dict, enc 
 
-# Import the helper files.
-common_words, common_letters_dict, common_bigrams_dict, enc = import_helper_files()
+# # Import the helper files.
+# common_words, common_letters_dict, common_bigrams_dict, enc = import_helper_files()
 
 
 
