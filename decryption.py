@@ -105,11 +105,11 @@ def crossover(dict_list, next_gen_size):
 
 # This function import and organize the helper files.
 def import_helper_files():
-    common_words = open("dict.txt", "r").read().split("\n")
+    common_words = open("Genetic_Algorithms_EX2/dict.txt", "r").read().split("\n")
     # Filter empty lines
     common_words = [word.lower() for word in common_words if word != ""]
     # Import common letters.
-    common_letters = open("Letter_Freq.txt", "r").read().split("\n")
+    common_letters = open("Genetic_Algorithms_EX2/Letter_Freq.txt", "r").read().split("\n")
     # store in dictionary
     common_letters_dict = {}
     common_letters = [letter.split("\t") for letter in common_letters]
@@ -118,7 +118,7 @@ def import_helper_files():
             common_letters_dict[letter[1].lower()] = letter[0]
         except IndexError:  
             continue
-    common_bigrams = open("Letter2_Freq.txt", "r").read().split("\n")
+    common_bigrams = open("Genetic_Algorithms_EX2/Letter2_Freq.txt", "r").read().split("\n")
     common_bigrams_dict = {}
     common_bigrams = [bigram.split("\t") for bigram in common_bigrams]
     for bigram in common_bigrams:
@@ -127,7 +127,7 @@ def import_helper_files():
                 common_bigrams_dict[bigram[1].lower()] = bigram[0]
         except IndexError:  
             continue
-    with open('enc.txt', 'r') as file:
+    with open('Genetic_Algorithms_EX2/enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     enc = text.split()
