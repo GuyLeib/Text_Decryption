@@ -58,23 +58,35 @@ def crossover(dict_list):
     for i in range(0, list_len, 2):
         parent_1 = dict_list[i]
         parent_2 = dict_list[i+1]
+        index3 = random.randint(0, list_len)
+        while index3 == i or index3 == i+1:
+            index3 = random.randint(0, list_len)
+        parent_3 = dict_list[index3]
         # create new dict that will be the child:
-        child = {}
+        child_1 = {}
+        child_2 = {}
         # choose a random index in the dict (but not the edges):
         r = random.randint(1, 24)
         # insert to the child the first r values from the first parent:
         for j in range(r):
             key_for_child=indexes_dict[j]
-            child[key_for_child]=parent_1[key_for_child]
+            child_1[key_for_child] = parent_1[key_for_child]
+            child_2[key_for_child] = parent_2[key_for_child]
         for k in range(r, 26, 1):
             key_for_child = indexes_dict[k]
-            chosen_val = parent_2[key_for_child]
+            chosen_val_1 = parent_2[key_for_child]
+            chosen_val_2 = parent_3[key_for_child]
             # make sure the value doesn't already exist in the child's dict:
-            while chosen_val in child.values():
+            while chosen_val_1 in child_1.values():
                 random_letter = random.choice(letters)
-                chosen_val = random_letter
-            child[key_for_child] = chosen_val
-        crossover_results_list.append(child)
+                chosen_val_1 = random_letter
+            child_1[key_for_child] = chosen_val_1
+            crossover_results_list.append(child_1)
+            while chosen_val_2 in child_2.values():
+                random_letter = random.choice(letters)
+                chosen_val_2 = random_letter
+            child_2[key_for_child] = chosen_val_2
+            crossover_results_list.append(child_2)
     return crossover_results_list
 
     # choose random index (bigger than 1)
