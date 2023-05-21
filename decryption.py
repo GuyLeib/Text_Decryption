@@ -4,7 +4,7 @@ import itertools
 import  random
 import copy
 letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
-population_size = 1000
+population_size = 500
 ###################### IMPORTANT ###########################
 # check if need a more relative path. 
 
@@ -40,6 +40,23 @@ def mutation(dict_list):
             dictionary[letter_2] = temp
     return dict_list
 
+def replace_dup(dictionary):
+    updated_dict = {}
+    encountered_values = set()
+    for key, value in dictionary.items():
+        if value in encountered_values:
+            available_letters = string.ascii_lowercase
+            used_letters = set(value.lower() for value in updated_dict.values())
+            unused_letters = [letter for letter in available_letters if letter not in used_letters]
+            if unused_letters:
+                new_letter = random.choice(unused_letters)
+                new_value = new_letter
+                updated_dict[key] = new_value
+                encountered_values.add(new_value)
+        else:
+            updated_dict[key] = value
+            encountered_values.add(value)
+    return updated_dict
 
 
 def crossover(dict_list):
@@ -58,9 +75,9 @@ def crossover(dict_list):
     for i in range(0, list_len, 2):
         parent_1 = dict_list[i]
         parent_2 = dict_list[i+1]
-        index3 = random.randint(0, list_len)
-        while index3 == i or index3 == i+1:
-            index3 = random.randint(0, list_len)
+        index3 = random.randint(0, list_len-1)
+        # while index3 == i or index3 == i+1:
+        #     index3 = random.randint(0, list_len-1)
         parent_3 = dict_list[index3]
         # create new dict that will be the child:
         child_1 = {}
@@ -74,19 +91,14 @@ def crossover(dict_list):
             child_2[key_for_child] = parent_2[key_for_child]
         for k in range(r, 26, 1):
             key_for_child = indexes_dict[k]
-            chosen_val_1 = parent_2[key_for_child]
-            chosen_val_2 = parent_3[key_for_child]
+            child_1[key_for_child] = parent_2[key_for_child]
+            child_2[key_for_child] = parent_1[key_for_child]
             # make sure the value doesn't already exist in the child's dict:
-            while chosen_val_1 in child_1.values():
-                random_letter = random.choice(letters)
-                chosen_val_1 = random_letter
-            child_1[key_for_child] = chosen_val_1
-            crossover_results_list.append(child_1)
-            while chosen_val_2 in child_2.values():
-                random_letter = random.choice(letters)
-                chosen_val_2 = random_letter
-            child_2[key_for_child] = chosen_val_2
-            crossover_results_list.append(child_2)
+            child_1=replace_dup(child_1)
+            child_2=replace_dup(child_2)
+             # add the new dicts to the crossover list:
+        crossover_results_list.append(child_1)
+        crossover_results_list.append(child_2)
     return crossover_results_list
 
     # choose random index (bigger than 1)
