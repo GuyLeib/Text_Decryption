@@ -24,11 +24,11 @@ def create_permutations():
     return permutations
 
 
-def mutation(dict_list):
+def mutation(dict_list,rate):
     global letters
     for dictionary in dict_list:
         # do the mutation over only 5 percent in the population:
-        if random.random() <= 0.2:
+        if random.random() <=rate:
             # choose 2 random letters:
             letter_1 = random.choice(letters)
             letter_2 = random.choice(letters)
@@ -321,6 +321,8 @@ def decryption_flow():
         replication_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.1):int(len(fitness_scores)*0.4)]]
         # Create a list of the top 90-100% of the population - elitism.
         elitism_list = [individual[0] for individual in fitness_scores[0:int(len(fitness_scores)*0.1)]]
+
+        elitism_to_mutate = copy.deepcopy(elitism_list)
         # Reset the population.
         population = []
         new_population = []
@@ -329,7 +331,9 @@ def decryption_flow():
         # Add the replication list to the new population.
         new_population.extend(replication_list)
         # Mutate the new population.
-        new_population = mutation(new_population)
+        new_population = mutation(new_population, 0.2)
+        elitism_to_mutate=mutation(elitism_to_mutate, 1)
+        new_population.extend(elitism_to_mutate)
         # Add the elitism list to the new population.
         new_population.extend(elitism_list)
 
