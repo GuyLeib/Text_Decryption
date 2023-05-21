@@ -28,7 +28,7 @@ def mutation(dict_list):
     global letters
     for dictionary in dict_list:
         # do the mutation over only 5 percent in the population:
-        if random.random() <= 0.05:
+        if random.random() <= 0.2:
             # choose 2 random letters:
             letter_1 = random.choice(letters)
             letter_2 = random.choice(letters)
@@ -59,7 +59,9 @@ def replace_dup(dictionary):
     return updated_dict
 
 
-def crossover(dict_list):
+
+
+def crossover(dict_list, next_gen_size):
     # create a new list of dictionaries
     crossover_results_list = []
     # create indexes dict in order to ease the crossover:
@@ -67,14 +69,13 @@ def crossover(dict_list):
     indexes_dict = {}
     for i in range(26):
         indexes_dict[i] = letters[i]
-    if len(dict_list)%2!=0:
-        list_len=len(dict_list)-1
-    else:
-        list_len = len(dict_list)
-    # for each  pairs of dictionaries:
-    for i in range(0, list_len, 2):
-        parent_1 = dict_list[i]
-        parent_2 = dict_list[i+1]
+    for i in range(int(next_gen_size/2)):
+        # choose 2 random parents:
+        parent_1 = random.choice(dict_list)
+        parent_2 = random.choice(dict_list)
+        # make sure the parents are not the same:
+        while parent_1 is parent_2:
+            parent_2=random.choice(dict_list)
         # create new dict that will be the child:
         child_1 = {}
         child_2 = {}
@@ -95,6 +96,7 @@ def crossover(dict_list):
         # add the new dicts to the crossover list:
         crossover_results_list.append(child_1)
         crossover_results_list.append(child_2)
+
     return crossover_results_list
 
     # choose random index (bigger than 1)
@@ -103,11 +105,11 @@ def crossover(dict_list):
 
 # This function import and organize the helper files.
 def import_helper_files():
-    common_words = open("Genetic_Algorithms_EX2/dict.txt", "r").read().split("\n")
+    common_words = open("dict.txt", "r").read().split("\n")
     # Filter empty lines
     common_words = [word.lower() for word in common_words if word != ""]
     # Import common letters.
-    common_letters = open("Genetic_Algorithms_EX2/Letter_Freq.txt", "r").read().split("\n")
+    common_letters = open("Letter_Freq.txt", "r").read().split("\n")
     # store in dictionary
     common_letters_dict = {}
     common_letters = [letter.split("\t") for letter in common_letters]
@@ -116,7 +118,7 @@ def import_helper_files():
             common_letters_dict[letter[1].lower()] = letter[0]
         except IndexError:  
             continue
-    common_bigrams = open("Genetic_Algorithms_EX2/Letter2_Freq.txt", "r").read().split("\n")
+    common_bigrams = open("Letter2_Freq.txt", "r").read().split("\n")
     common_bigrams_dict = {}
     common_bigrams = [bigram.split("\t") for bigram in common_bigrams]
     for bigram in common_bigrams:
@@ -125,7 +127,7 @@ def import_helper_files():
                 common_bigrams_dict[bigram[1].lower()] = bigram[0]
         except IndexError:  
             continue
-    with open('Genetic_Algorithms_EX2/enc.txt', 'r') as file:
+    with open('enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     enc = text.split()
@@ -289,9 +291,15 @@ def fitness(individual):
     score3 = common_bigrams_score(decrypted_text)
     # Calculate the total fitness score 
     total_score = 0.5*score1 + 0.3*score2 + 0.2*score3
-    return total_score
+    return score1, total_score
     
-
+def how_close_to_real_dict(dict):
+    solution={'a': 'y', 'b': 'x', 'c': 'i', 'd': 'n', 'e': 't', 'f': 'o', 'g': 'z', 'h': 'j', 'i': 'c', 'j': 'e', 'k': 'b', 'l': 'l', 'm': 'd', 'n': 'u', 'o': 'k', 'p': 'm', 'q': 's', 'r': 'v', 's': 'p', 't': 'q', 'u': 'r', 'v': 'h', 'w': 'w', 'x': 'g', 'y': 'a', 'z': 'f'}
+    same=0
+    for key in dict.keys():
+        if dict[key] == solution[key]:
+            same+=1
+    return same/26
 
 # This function handles the flow of the genetic algorithm.
 def decryption_flow():
@@ -301,11 +309,12 @@ def decryption_flow():
         # Store the calculated fitness score for each individual and the individual.
         fitness_scores = []
         for individual in population:
-            fitness_scores.append((individual,fitness(individual)))
+            words_perc, total_score=fitness(individual)
+            fitness_scores.append((individual,words_perc, total_score))
         # Sort the population by descending fitness score.
-        fitness_scores.sort(key=lambda x: x[1], reverse=True)
+        fitness_scores.sort(key=lambda x: x[2], reverse=True)
         # Print the best solution in the current generation.
-        print("Generation: " + str(i) + " Best solution: " + str(fitness_scores[0][0]) + " Fitness score: " + str(fitness_scores[0][1]))
+        print("Generation: " + str(i) + " Best solution: " + str(fitness_scores[0][0]) + " Fitness score: " + str(fitness_scores[0][2])+ " success percent: " + str(how_close_to_real_dict((fitness_scores[0][0]))))
         # Create a list of the top 40-70% individuals of the population - for crossover.
         crossover_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.4):int(len(fitness_scores)*0.8)]]
         # Create a list of the top 70-90% of the population - for replication
@@ -316,7 +325,7 @@ def decryption_flow():
         population = []
         new_population = []
         # Create a new population using crossover.
-        new_population = crossover(crossover_list)
+        new_population = crossover(crossover_list, population_size)
         # Add the replication list to the new population.
         new_population.extend(replication_list)
         # Mutate the new population.
