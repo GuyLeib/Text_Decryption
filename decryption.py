@@ -2,6 +2,7 @@ import string
 import numpy as np
 import itertools
 import  random
+import copy
 letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
 population_size = 1000
 ###################### IMPORTANT ###########################
@@ -161,6 +162,7 @@ def common_letters_score(decrypted_text):
     score = score ** 0.5
     # normalize the score to be between 0 and 1
     #score = 1 - (score / len(common_letters_dict))
+    score = 1 - score
     return score
 
 # This function calculate a score based on how many common bigrams are in the solution.
@@ -195,6 +197,8 @@ def common_bigrams_score(decrypted_text):
             score += (final_bigram_freq[bigram] - float(known_bigrams_freq[bigram]))**2
 
     score = score ** 0.5
+
+    score = 1 - score
 
     return score
 
@@ -271,7 +275,7 @@ def fitness(individual):
 
 # This function handles the flow of the genetic algorithm.
 def decryption_flow():
-    generations = 500
+    generations = 1000
     population = create_permutations()
     for i in range(generations):
         # Store the calculated fitness score for each individual and the individual.
@@ -283,12 +287,14 @@ def decryption_flow():
         # Print the best solution in the current generation.
         print("Generation: " + str(i) + " Best solution: " + str(fitness_scores[0][0]) + " Fitness score: " + str(fitness_scores[0][1]))
         # Create a list of the top 40-70% individuals of the population - for crossover.
-        crossover_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.4):int(len(fitness_scores)*0.7)]]
+        crossover_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.4):int(len(fitness_scores)*0.8)]]
         # Create a list of the top 70-90% of the population - for replication
-        replication_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.7):int(len(fitness_scores)*0.9)]]
+        replication_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.1):int(len(fitness_scores)*0.4)]]
         # Create a list of the top 90-100% of the population - elitism.
-        elitism_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.9):]]
-
+        elitism_list = [individual[0] for individual in fitness_scores[0:int(len(fitness_scores)*0.1)]]
+        # Reset the population.
+        population = []
+        new_population = []
         # Create a new population using crossover.
         new_population = crossover(crossover_list)
         # Add the replication list to the new population.
@@ -299,7 +305,7 @@ def decryption_flow():
         new_population.extend(elitism_list)
 
         # Replace the old population with the new population.
-        population = new_population
+        population = copy.deepcopy(new_population)
 
 
         
