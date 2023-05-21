@@ -49,9 +49,12 @@ def crossover(dict_list):
     indexes_dict = {}
     for i in range(26):
         indexes_dict[i] = letters[i]
-
+    if len(dict_list)%2!=0:
+        list_len=len(dict_list)-1
+    else:
+        list_len = len(dict_list)
     # for each  pairs of dictionaries:
-    for i in range(0, len(dict_list), 2):
+    for i in range(0, list_len, 2):
         parent_1 = dict_list[i]
         parent_2 = dict_list[i+1]
         # create new dict that will be the child:
