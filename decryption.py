@@ -75,10 +75,6 @@ def crossover(dict_list):
     for i in range(0, list_len, 2):
         parent_1 = dict_list[i]
         parent_2 = dict_list[i+1]
-        index3 = random.randint(0, list_len-1)
-        # while index3 == i or index3 == i+1:
-        #     index3 = random.randint(0, list_len-1)
-        parent_3 = dict_list[index3]
         # create new dict that will be the child:
         child_1 = {}
         child_2 = {}
@@ -93,10 +89,10 @@ def crossover(dict_list):
             key_for_child = indexes_dict[k]
             child_1[key_for_child] = parent_2[key_for_child]
             child_2[key_for_child] = parent_1[key_for_child]
-            # make sure the value doesn't already exist in the child's dict:
-            child_1=replace_dup(child_1)
-            child_2=replace_dup(child_2)
-             # add the new dicts to the crossover list:
+        # make sure the value doesn't already exist in the child's dict:
+        child_1 = replace_dup(child_1)
+        child_2 = replace_dup(child_2)
+        # add the new dicts to the crossover list:
         crossover_results_list.append(child_1)
         crossover_results_list.append(child_2)
     return crossover_results_list
