@@ -107,8 +107,8 @@ def import_helper_files():
     enc = text.split()
     return common_words, common_letters_dict, common_bigrams_dict, enc 
 
-# # Import the helper files.
-# common_words, common_letters_dict, common_bigrams_dict, enc = import_helper_files()
+# Import the helper files.
+common_words, common_letters_dict, common_bigrams_dict, enc = import_helper_files()
 
 
 
@@ -277,12 +277,28 @@ def decryption_flow():
             fitness_scores.append((individual,fitness(individual)))
         # Sort the population by descending fitness score.
         fitness_scores.sort(key=lambda x: x[1], reverse=True)
+        # Print the best solution in the current generation.
+        print("Generation: " + str(i) + " Best solution: " + str(fitness_scores[0][0]) + " Fitness score: " + str(fitness_scores[0][1]))
         # Create a list of the top 40-70% individuals of the population - for crossover.
         crossover_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.4):int(len(fitness_scores)*0.7)]]
         # Create a list of the top 70-90% of the population - for replication
         replication_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.7):int(len(fitness_scores)*0.9)]]
         # Create a list of the top 90-100% of the population - elitism.
         elitism_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.9):]]
+
+        # Create a new population using crossover.
+        new_population = crossover(crossover_list)
+        # Add the replication list to the new population.
+        new_population.extend(replication_list)
+        # Mutate the new population.
+        new_population = mutation(new_population)
+        # Add the elitism list to the new population.
+        new_population.extend(elitism_list)
+
+        # Replace the old population with the new population.
+        population = new_population
+
+
         
 
 decryption_flow()
