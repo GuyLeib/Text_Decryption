@@ -6,7 +6,7 @@ import copy
 from bisect import bisect_left
 random.seed(147)
 letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
-population_size = 500
+population_size = 1000
 score1_weight = 0.1
 score2_weight = 0.7
 score3_weight = 0.2
@@ -29,13 +29,33 @@ def create_permutations():
     return permutations
 
 
-def mutation(dict_list,rate):
+def inversion(dict_list, rate):
     global letters
     
     for dictionary in dict_list:
+         if random.random() <=rate:
+            # choose 2 random letters:
+            letter_1 = random.choice(letters)
+            while letter_1=='x' or letter_1=='y'or letter_1=='z':
+                letter_1 = random.choice(letters)
+            index = letters.index(letter_1)
+            # swap values between 2 keys:
+            temp=dictionary[letters[index]]
+            dictionary[letters[index]] = dictionary[letters[index+3]]
+            dictionary[letters[index+3]] = temp
+            temp=dictionary[letters[index+1]]
+            dictionary[letters[index+1]] = dictionary[letters[index + 2]]
+            dictionary[letters[index + 2]] = temp
+
+    return dict_list
+
+
+def mutation(dict_list, rate):
+    global letters
+    for dictionary in dict_list:
         # do the mutation over only 5 percent in the population:
         for m in range(5):
-            if random.random() <=rate:
+            if random.random() <= rate:
                 # choose 2 random letters:
                 letter_1 = random.choice(letters)
                 letter_2 = random.choice(letters)
@@ -131,13 +151,13 @@ def import_helper_files():
         try:
             if bigram[1]!= "" and len(bigram[1]) == 2:
                 common_bigrams_dict[bigram[1].lower()] = bigram[0]
-        except IndexError:  
+        except IndexError:
             continue
     with open('Genetic_Algorithms_EX2/enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     enc = text.split()
-    return common_words, common_letters_dict, common_bigrams_dict, enc 
+    return common_words, common_letters_dict, common_bigrams_dict, enc
 
 # Import the helper files.
 common_words, common_letters_dict, common_bigrams_dict, enc = import_helper_files()
@@ -311,28 +331,68 @@ def how_close_to_real_dict(dict):
             same+=1
     return same/26
 
+
+def biased_crossover_list(fitness_scores):
+    total_score_sum = sum(score[2] for score in fitness_scores)
+    new_list=[]
+    for individual in fitness_scores:
+        amount=int(individual[2]*total_score_sum)
+        for i in range(amount):
+            new_list.append(individual)
+
+    return new_list
+
+
+
 # This function handles the flow of the genetic algorithm.
 def decryption_flow():
+    fitness_history=0
+    count_same_fitness=0
+    rate = 0.2
     global score1_weight, score2_weight, score3_weight
     generations = 1000
     population = create_permutations()
     for i in range(generations):
         # Adapt the weights of the fitness scores.
-        if i==700:
+        if i==30 :
+            score1_weight = 0.2
+            score2_weight = 0.5
+            score3_weight = 0.3
+        if i==50:
+            score1_weight = 0.4
+            score2_weight = 0.4
+            score3_weight = 0.2
+        if i==70:
             score1_weight = 0.6
             score2_weight = 0.3
             score3_weight = 0.1
+
         # Store the calculated fitness score for each individual and the individual.
         fitness_scores = []
         for individual in population:
             words_perc, total_score=fitness(individual)
+            if how_close_to_real_dict(individual) == 1:
+                print(total_score)
             fitness_scores.append((individual,words_perc, total_score))
         # Sort the population by descending fitness score.
         fitness_scores.sort(key=lambda x: x[2], reverse=True)
+        print("Generation: " + str(i) + " Best solution: " + str(fitness_scores[0][0]) + " Fitness score: " + str(
+            fitness_scores[0][2]) + " success percent: " + str(how_close_to_real_dict((fitness_scores[0][0]))))
         # Print the best solution in the current generation.
-        print("Generation: " + str(i) + " Best solution: " + str(fitness_scores[0][0]) + " Fitness score: " + str(fitness_scores[0][2])+ " success percent: " + str(how_close_to_real_dict((fitness_scores[0][0]))))
+        if (fitness_history==fitness_scores[0][0]):
+            count_same_fitness+=1
+        else:
+            count_same_fitness=0
+        fitness_history=fitness_scores[0][0]
+        if count_same_fitness>2 and rate<=0.8:
+            rate=rate*1.2
+            fitness_scores = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.05)]]
+        else:
+            rate=rate*0.8
+
         # Create a list of the top 40-70% individuals of the population - for crossover.
-        crossover_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.2):int(len(fitness_scores)*0.4)]]
+        crossover_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores) * 0.2):int(len(fitness_scores) * 0.4)]]
+        #new_crossover_list = biased_crossover_list(crossover_list)
         # Create a list of the top 70-90% of the population - for replication
         replication_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.05):int(len(fitness_scores)*0.2)]]
         # Create a list of the top 90-100% of the population - elitism.
@@ -347,16 +407,16 @@ def decryption_flow():
         # Add the replication list to the new population.
         new_population.extend(replication_list)
         # Mutate the new population.
-        new_population = mutation(new_population, 0.2)
+        new_population = inversion(new_population, rate)
+        new_population = mutation(new_population, rate)
         elitism_to_mutate = mutation(elitism_to_mutate, 1)
         new_population.extend(elitism_to_mutate)
         # Add the elitism list to the new population.
         new_population.extend(elitism_list)
-
         # Replace the old population with the new population.
         population = copy.deepcopy(new_population)
 
 
-        
+
 
 decryption_flow()
