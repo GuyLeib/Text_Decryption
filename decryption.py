@@ -354,49 +354,40 @@ def decryption_flow():
     population = create_permutations()
     for i in range(generations):
         # Adapt the weights of the fitness scores.
-        if i==30 :
-            score1_weight = 0.2
-            score2_weight = 0.5
-            score3_weight = 0.3
-        if i==50:
-            score1_weight = 0.4
-            score2_weight = 0.4
-            score3_weight = 0.2
-        if i==70:
-            score1_weight = 0.6
-            score2_weight = 0.3
+        if i==0:
+            score1_weight = 0.7
+            score2_weight = 0.2
             score3_weight = 0.1
+
 
         # Store the calculated fitness score for each individual and the individual.
         fitness_scores = []
         for individual in population:
             words_perc, total_score=fitness(individual)
-            if how_close_to_real_dict(individual) == 1:
-                print(total_score)
             fitness_scores.append((individual,words_perc, total_score))
         # Sort the population by descending fitness score.
         fitness_scores.sort(key=lambda x: x[2], reverse=True)
         print("Generation: " + str(i) + " Best solution: " + str(fitness_scores[0][0]) + " Fitness score: " + str(
             fitness_scores[0][2]) + " success percent: " + str(how_close_to_real_dict((fitness_scores[0][0]))))
         # Print the best solution in the current generation.
-        if (fitness_history==fitness_scores[0][0]):
+        if (fitness_history==fitness_scores[0][2]):
             count_same_fitness+=1
         else:
             count_same_fitness=0
-        fitness_history=fitness_scores[0][0]
-        if count_same_fitness>2 and rate<=0.8:
+        fitness_history=fitness_scores[0][2]
+        if count_same_fitness>1 and rate<=0.8:
             rate=rate*1.2
-            fitness_scores = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.05)]]
-        else:
+            fitness_scores = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.1)]]
+        elif count_same_fitness==0:
             rate=rate*0.8
 
         # Create a list of the top 40-70% individuals of the population - for crossover.
-        crossover_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores) * 0.2):int(len(fitness_scores) * 0.4)]]
+        crossover_list = [individual[0] for individual in fitness_scores[0:int(len(fitness_scores) * 0.3)]]
         #new_crossover_list = biased_crossover_list(crossover_list)
         # Create a list of the top 70-90% of the population - for replication
-        replication_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.05):int(len(fitness_scores)*0.2)]]
+        #replication_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.1):int(len(fitness_scores)*0.2)]]
         # Create a list of the top 90-100% of the population - elitism.
-        elitism_list = [individual[0] for individual in fitness_scores[0:int(len(fitness_scores)*0.05)]]
+        elitism_list = [individual[0] for individual in fitness_scores[0:int(len(fitness_scores)*0.1)]]
 
         elitism_to_mutate = copy.deepcopy(elitism_list)
         # Reset the population.
@@ -405,7 +396,7 @@ def decryption_flow():
         # Create a new population using crossover.
         new_population = crossover(crossover_list, population_size)
         # Add the replication list to the new population.
-        new_population.extend(replication_list)
+        #new_population.extend(replication_list)
         # Mutate the new population.
         new_population = inversion(new_population, rate)
         new_population = mutation(new_population, rate)
