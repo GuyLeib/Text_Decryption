@@ -4,7 +4,7 @@ import itertools
 import  random
 import copy
 from bisect import bisect_left
-random.seed(147)
+#random.seed(147)
 letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
 population_size = 1000
 score1_weight = 0.1
@@ -355,9 +355,9 @@ def decryption_flow():
     for i in range(generations):
         # Adapt the weights of the fitness scores.
         if i==0:
-            score1_weight = 0.7
-            score2_weight = 0.2
-            score3_weight = 0.1
+            score1_weight = 0.5
+            score2_weight = 0.3
+            score3_weight = 0.2
 
 
         # Store the calculated fitness score for each individual and the individual.
@@ -375,11 +375,18 @@ def decryption_flow():
         else:
             count_same_fitness=0
         fitness_history=fitness_scores[0][2]
-        if count_same_fitness>1 and rate<=0.8:
-            rate=rate*1.2
-            fitness_scores = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.1)]]
+        # if i%2==0 and i<30:
+        #     fitness_scores = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.1)]]
+        if count_same_fitness>=1:
+            if rate<=0.8:
+                rate=rate*1.2
+            # if count_same_fitness>4:
+            #     global population_size
+            #     population_size+=100
+            fitness_scores = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.2)]]
         elif count_same_fitness==0:
             rate=rate*0.8
+            # population_size -= 100
 
         # Create a list of the top 40-70% individuals of the population - for crossover.
         crossover_list = [individual[0] for individual in fitness_scores[0:int(len(fitness_scores) * 0.3)]]
@@ -387,7 +394,7 @@ def decryption_flow():
         # Create a list of the top 70-90% of the population - for replication
         #replication_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.1):int(len(fitness_scores)*0.2)]]
         # Create a list of the top 90-100% of the population - elitism.
-        elitism_list = [individual[0] for individual in fitness_scores[0:int(len(fitness_scores)*0.1)]]
+        elitism_list = [individual[0] for individual in fitness_scores[0:int(len(fitness_scores)*0.05)]]
 
         elitism_to_mutate = copy.deepcopy(elitism_list)
         # Reset the population.
