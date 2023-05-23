@@ -4,7 +4,7 @@ import itertools
 import  random
 import copy
 from bisect import bisect_left
-#random.seed(147)
+random.seed(147)
 letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
 population_size = 1000
 score1_weight = 0.1
@@ -157,22 +157,17 @@ def import_helper_files():
         text = file.read()
         # split the text into words
     enc = text.split()
-    with open('Genetic_Algorithms_EX2/test1.txt', 'r') as file:
+    with open('Genetic_Algorithms_EX2/test1enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     test1 = text.split()
-    with open('Genetic_Algorithms_EX2/test2.txt', 'r') as file:
+    with open('Genetic_Algorithms_EX2/test2enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     test2 = text.split()
-    with open('Genetic_Algorithms_EX2/test3.txt', 'r') as file:
-        text = file.read()
-        # split the text into words
-    test3 = text.split()
-    return common_words, common_letters_dict, common_bigrams_dict, enc, test1, test2, test3
-
+    return common_words, common_letters_dict, common_bigrams_dict, enc, test1, test2
 # Import the helper files.
-common_words, common_letters_dict, common_bigrams_dict, enc, test1,test2,test3 = import_helper_files()
+common_words, common_letters_dict, common_bigrams_dict, enc, test1,test2 = import_helper_files()
 
 
 
@@ -338,22 +333,19 @@ def fitness(individual,enc=enc):
 def how_close_to_real_dict(dict,test):
     if test=="test1":
         solution = {
-    'a': 'x', 'b': 'y', 'c': 'z', 'd': 'a', 'e': 'b', 
-    'f': 'c', 'g': 'd', 'h': 'e', 'i': 'f', 'j': 'g', 
-    'k': 'h', 'l': 'i', 'm': 'j', 'n': 'k', 'o': 'l', 
-    'p': 'm', 'q': 'n', 'r': 'o', 's': 'p', 't': 'q', 
-    'u': 'r', 'v': 's', 'w': 't', 'x': 'u', 'y': 'v', 
-    'z': 'w'
+    'a': 'q', 'b': 'x', 'c': 'e', 'd': 'r', 'e': 't', 'f': 'y', 'g': 'u', 'h': 'i', 'i': 'o', 'j': 'p',
+    'k': 'a', 'l': 's', 'm': 'd', 'n': 'f', 'o': 'g', 'p': 'h', 'q': 'j', 'r': 'b', 's': 'l', 't': 'z',
+    'u': 'k', 'v': 'c', 'w': 'v', 'x': 'w', 'y': 'n', 'z': 'm'
 }
+
     elif test == "test2":
-        solution =  {
-    'a': 'v', 'b': 'w', 'c': 'x', 'd': 'y', 'e': 'z',
-    'f': 'a', 'g': 'b', 'h': 'c', 'i': 'd', 'j': 'e',
-    'k': 'f', 'l': 'g', 'm': 'h', 'n': 'i', 'o': 'j',
-    'p': 'k', 'q': 'l', 'r': 'm', 's': 'n', 't': 'o',
-    'u': 'p', 'v': 'q', 'w': 'r', 'x': 's', 'y': 't',
-    'z': 'u'
+        solution  = {
+    'a': 'x', 'b': 'w', 'c': 'e', 'd': 'r', 'e': 't', 'f': 'y', 'g': 'u', 'h': 'i', 'i': 'o', 'j': 'p',
+    'k': 'a', 'l': 's', 'm': 'd', 'n': 'f', 'o': 'g', 'p': 'h', 'q': 'j', 'r': 'k', 's': 'l', 't': 'q',
+    'u': 'z', 'v': 'c', 'w': 'v', 'x': 'b', 'y': 'n', 'z': 'm'
 }
+
+
     elif test == "test3":
         solution = {
     'a': 's', 'b': 't', 'c': 'u', 'd': 'v', 'e': 'w',
@@ -395,11 +387,9 @@ def decryption_flow():
     for i in range(generations):
         # Adapt the weights of the fitness scores.
         if i==0:
-            score1_weight = 0.5
-            score2_weight = 0.3
-            score3_weight = 0.2
-
-
+            score1_weight = 0.7
+            score2_weight = 0.2
+            score3_weight = 0.1
         # Store the calculated fitness score for each individual and the individual.
         fitness_scores = []
         for individual in population:
@@ -472,22 +462,22 @@ def testing():
     for i in range(generations):
         # Adapt the weights of the fitness scores.
         if i==0:
-            score1_weight = 0.5
-            score2_weight = 0.3
-            score3_weight = 0.2
+            score1_weight = 0.7
+            score2_weight = 0.2
+            score3_weight = 0.1
         # Store the calculated fitness score for each individual and the individual.
         fitness_scores1 = []
         fitness_scores2 = []
         fitness_scores3 = []
         for individual1, individual2, individual3 in zip(population1, population2, population3):
             total_score1=fitness(individual1,test1)
-            success_percent1=how_close_to_real_dict(individual1,test1)
+            success_percent1=how_close_to_real_dict(individual1,"test1")
             fitness_scores1.append((individual1,success_percent1, total_score1))
             total_score2=fitness(individual2,test2)
-            success_percent2=how_close_to_real_dict(individual2,test2)
+            success_percent2=how_close_to_real_dict(individual2,"test2")
             fitness_scores2.append((individual2,success_percent2, total_score2))
-            total_score3=fitness(individual3,test3)
-            success_percent3=how_close_to_real_dict(individual3,test3)
+            total_score3=fitness(individual3,enc)
+            success_percent3=how_close_to_real_dict(individual3,"enc")
             fitness_scores3.append((individual3,success_percent3, total_score3))
         # Sort the population by descending fitness score.
         fitness_scores1.sort(key=lambda x: x[2], reverse=True)
@@ -509,7 +499,7 @@ def testing():
             if rate1<=0.8:
                 rate1=rate1*1.2
             # Genetic drift
-            fitness_scores1 = [individual for individual in fitness_scores1[0:int(len(fitness_scores1) * 0.2)]]
+            fitness_scores1 = [individual for individual in fitness_scores1[0:int(len(fitness_scores1) * 0.1)]]
         elif count_same_fitness1==0:
             rate1=rate1*0.8
 
@@ -523,7 +513,7 @@ def testing():
             if rate2<=0.8:
                 rate2=rate2*1.2
             # Genetic drift
-            fitness_scores2 = [individual for individual in fitness_scores2[0:int(len(fitness_scores2) * 0.2)]]
+            fitness_scores2 = [individual for individual in fitness_scores2[0:int(len(fitness_scores2) * 0.1)]]
         elif count_same_fitness2==0:
             rate2=rate2*0.8
 
@@ -537,7 +527,7 @@ def testing():
             if rate3<=0.8:
                 rate3=rate3*1.2
             # Genetic drift
-            fitness_scores3 = [individual for individual in fitness_scores3[0:int(len(fitness_scores3) * 0.2)]]
+            fitness_scores3 = [individual for individual in fitness_scores3[0:int(len(fitness_scores3) * 0.1)]]
         elif count_same_fitness3==0:
             rate3=rate3*0.8
         
