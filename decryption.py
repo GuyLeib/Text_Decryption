@@ -333,17 +333,15 @@ def fitness(individual,enc=enc):
 def how_close_to_real_dict(dict,test):
     if test=="test1":
         solution = {
-    'a': 'q', 'b': 'x', 'c': 'e', 'd': 'r', 'e': 't', 'f': 'y', 'g': 'u', 'h': 'i', 'i': 'o', 'j': 'p',
-    'k': 'a', 'l': 's', 'm': 'd', 'n': 'f', 'o': 'g', 'p': 'h', 'q': 'j', 'r': 'b', 's': 'l', 't': 'z',
-    'u': 'k', 'v': 'c', 'w': 'v', 'x': 'w', 'y': 'n', 'z': 'm'
-}
+            'a': 'q', 'b': 'w', 'c': 'e', 'd': 'r', 'e': 't', 'f': 'y', 'g': 'u', 'h': 'i', 'i': 'o', 'j': 'p',
+            'k': 'a', 'l': 's', 'm': 'd', 'n': 'f', 'o': 'g', 'p': 'h', 'q': ' j', 'r': 'k', 's': 'l',
+            't': 'z', 'u': 'x', 'v': 'c', 'w': 'v', 'x': 'b', 'y': 'n', 'z': 'm'}
 
     elif test == "test2":
         solution  = {
     'a': 'x', 'b': 'w', 'c': 'e', 'd': 'r', 'e': 't', 'f': 'y', 'g': 'u', 'h': 'i', 'i': 'o', 'j': 'p',
     'k': 'a', 'l': 's', 'm': 'd', 'n': 'f', 'o': 'g', 'p': 'h', 'q': 'j', 'r': 'k', 's': 'l', 't': 'q',
-    'u': 'z', 'v': 'c', 'w': 'v', 'x': 'b', 'y': 'n', 'z': 'm'
-}
+    'u': 'z', 'v': 'c', 'w': 'v', 'x': 'b', 'y': 'n', 'z': 'm'}
 
 
     elif test == "test3":
@@ -534,13 +532,13 @@ def testing():
 
         # Create a list of the top 40-70% individuals of the population - for crossover.
         test1_crossover_list = [individual[0] for individual in fitness_scores1[0:int(len(fitness_scores1) * 0.3)]]
-        test1_elitism_list = [individual[0] for individual in fitness_scores1[0:int(len(fitness_scores1)*0.05)]]
+        test1_elitism_list = [individual[0] for individual in fitness_scores1[0:int(len(fitness_scores1)*0.1)]]
         test1_elitism_to_mutate = copy.deepcopy(test1_elitism_list)
         test2_crossover_list = [individual[0] for individual in fitness_scores2[0:int(len(fitness_scores2) * 0.3)]]
-        test2_elitism_list = [individual[0] for individual in fitness_scores2[0:int(len(fitness_scores2)*0.05)]]
+        test2_elitism_list = [individual[0] for individual in fitness_scores2[0:int(len(fitness_scores2)*0.1)]]
         test2_elitism_to_mutate = copy.deepcopy(test2_elitism_list)
         test3_crossover_list = [individual[0] for individual in fitness_scores3[0:int(len(fitness_scores3) * 0.3)]]
-        test3_elitism_list = [individual[0] for individual in fitness_scores3[0:int(len(fitness_scores3)*0.05)]]
+        test3_elitism_list = [individual[0] for individual in fitness_scores3[0:int(len(fitness_scores3)*0.1)]]
         test3_elitism_to_mutate = copy.deepcopy(test3_elitism_list)
 
         # Reset the population.
