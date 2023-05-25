@@ -6,10 +6,11 @@ import copy
 from bisect import bisect_left
 random.seed(147)
 letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
-population_size = 10000
+population_size = 1000
 score1_weight = 0.1
 score2_weight = 0.7
 score3_weight = 0.2
+fitness_scores = []
 ###################### IMPORTANT ###########################
 # check if need a more relative path. 
 
@@ -54,7 +55,7 @@ def mutation(dict_list, rate):
     global letters
     for dictionary in dict_list:
         # do the mutation over only 5 percent in the population:
-        for m in range(5):
+        for m in range(3):
             if random.random() <= rate:
                 # choose 2 random letters:
                 letter_1 = random.choice(letters)
@@ -66,6 +67,37 @@ def mutation(dict_list, rate):
                 dictionary[letter_1] = dictionary[letter_2]
                 dictionary[letter_2] = temp
     return dict_list
+
+def local_optimization(n,algo_type):
+    global letters
+    global population
+    global fitness_scores
+    new_population=[]
+    new_fitness_scores=[]
+    for individual in fitness_scores:
+        for i in range(n):
+            new_individual = copy.deepcopy(individual)
+            # choose 2 random letters:
+            letter_1 = random.choice(letters)
+            letter_2 = random.choice(letters)
+            while letter_2 == letter_1:
+                letter_2 = random.choice(letters)
+            # swap values between 2 keys:
+            temp = individual[0][letter_1]
+            new_individual[0][letter_1] = new_individual[0][letter_2]
+            new_individual[0][letter_2] = temp
+            old_fitness=individual[0][2]
+            new_fitness=fitness(new_individual)
+        if new_fitness>=old_fitness:
+            if algo_type=="lamark":
+                new_population.append(new_individual)
+            else:
+                individual[2]=new_individual[2]
+                new_population.append(individual)
+            new_fitness_scores.append(individual)
+        fitness_scores=copy.deepcopy(new_fitness_scores)
+        population=copy.deepcopy(new_population)
+
 
 def replace_dup(dictionary):
     updated_dict = {}
@@ -131,11 +163,11 @@ def crossover(dict_list, next_gen_size):
 
 # This function import and organize the helper files.
 def import_helper_files():
-    common_words = open("Genetic_Algorithms_EX2/dict.txt", "r").read().split("\n")
+    common_words = open("dict.txt", "r").read().split("\n")
     # Filter empty lines
     common_words = [word.lower() for word in common_words if word != ""]
     # Import common letters.
-    common_letters = open("Genetic_Algorithms_EX2/Letter_Freq.txt", "r").read().split("\n")
+    common_letters = open("Letter_Freq.txt", "r").read().split("\n")
     # store in dictionary
     common_letters_dict = {}
     common_letters = [letter.split("\t") for letter in common_letters]
@@ -144,7 +176,7 @@ def import_helper_files():
             common_letters_dict[letter[1].lower()] = letter[0]
         except IndexError:  
             continue
-    common_bigrams = open("Genetic_Algorithms_EX2/Letter2_Freq.txt", "r").read().split("\n")
+    common_bigrams = open("Letter2_Freq.txt", "r").read().split("\n")
     common_bigrams_dict = {}
     common_bigrams = [bigram.split("\t") for bigram in common_bigrams]
     for bigram in common_bigrams:
@@ -153,15 +185,15 @@ def import_helper_files():
                 common_bigrams_dict[bigram[1].lower()] = bigram[0]
         except IndexError:
             continue
-    with open('Genetic_Algorithms_EX2/enc.txt', 'r') as file:
+    with open('enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     enc = text.split()
-    with open('Genetic_Algorithms_EX2/test1enc.txt', 'r') as file:
+    with open('test1enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     test1 = text.split()
-    with open('Genetic_Algorithms_EX2/test2enc.txt', 'r') as file:
+    with open('test2enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     test2 = text.split()
@@ -442,7 +474,7 @@ def write_solution(individual,enc):
     
 
 # This function handles the flow of the # algorithm.
-def decryption_flow():
+def decryption_flow(algo_type="classic"):
     fitness_history=0
     count_same_fitness=0
     rate = 0.2
@@ -456,12 +488,15 @@ def decryption_flow():
             score2_weight = 0.2
             score3_weight = 0.1
         # Store the calculated fitness score for each individual and the individual.
-        fitness_scores = []
-        for individual in population:
-            words_perc, total_score=fitness(individual)
-            fitness_scores.append((individual,words_perc, total_score))
+        global fitness_scores
+        if algo_type=="classic":
+            fitness_scores=[]
+            for individual in population:
+                words_perc, total_score=fitness(individual)
+                fitness_scores.append((individual,words_perc, total_score))
         # Sort the population by descending fitness score.
         fitness_scores.sort(key=lambda x: x[2], reverse=True)
+        best_solution=fitness_scores[0]
         print("Generation: " + str(i) + " Best solution: " + str(fitness_scores[0][0]) + " Fitness score: " + str(
             fitness_scores[0][2]) + " success percent: " + str(how_close_to_real_dict((fitness_scores[0][0]))))
         # Print the best solution in the current generation.
@@ -508,6 +543,12 @@ def decryption_flow():
         new_population.extend(elitism_list)
         # Replace the old population with the new population.
         population = copy.deepcopy(new_population)
+    if algo_type!="classic":
+        # perform local optimization:
+        n=5
+        fitness_scores=local_optimization(fitness_scores,n,algo_type)
+
+
 
 def testing():
     fitness_history1=0
@@ -551,8 +592,6 @@ def testing():
         print("TEST1 "+"Generation: " + str(i) + " Fitness score: " + str(fitness_scores1[0][2]) + " success percent: " + str(fitness_scores1[0][1]))
         print("TEST2 " + "Generation: " + str(i) + " Fitness score: " + str(fitness_scores2[0][2]) + " success percent: " + str(fitness_scores2[0][1]))
         print("TEST3 "+" Generation: " + str(i) +  " Fitness score: " + str(fitness_scores3[0][2]) + " success percent: " + str(fitness_scores3[0][1]) +"\n\n")
-
-
 
         if (fitness_history1==fitness_scores1[0][2]):
             count_same_fitness1+=1
