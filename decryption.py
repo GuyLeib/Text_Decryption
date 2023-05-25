@@ -6,7 +6,7 @@ import copy
 from bisect import bisect_left
 random.seed(147)
 letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
-population_size = 1000
+population_size = 10000
 score1_weight = 0.1
 score2_weight = 0.7
 score3_weight = 0.2
@@ -333,26 +333,64 @@ def fitness(individual,enc=enc):
 def how_close_to_real_dict(dict,test):
     if test=="test1":
         solution = {
-            'a': 'q', 'b': 'w', 'c': 'e', 'd': 'r', 'e': 't', 'f': 'y', 'g': 'u', 'h': 'i', 'i': 'o', 'j': 'p',
-            'k': 'a', 'l': 's', 'm': 'd', 'n': 'f', 'o': 'g', 'p': 'h', 'q': ' j', 'r': 'k', 's': 'l',
-            't': 'z', 'u': 'x', 'v': 'c', 'w': 'v', 'x': 'b', 'y': 'n', 'z': 'm'}
+    'a': 'q',
+    'b': 'w',
+    'c': 'e',
+    'd': 'r',
+    'e': 't',
+    'f': 'y',
+    'g': 'u',
+    'h': 'i',
+    'i': 'o',
+    'j': 'p',
+    'k': 'a',
+    'l': 's',
+    'm': 'd',
+    'n': 'f',
+    'o': 'g',
+    'p': 'h',
+    'q': 'k',
+    'r': 'j',
+    's': 'l',
+    't': 'z',
+    'u': 'x',
+    'v': 'c',
+    'w': 'v',
+    'x': 'b',
+    'y': 'n',
+    'z': 'm'
+}
 
     elif test == "test2":
         solution  = {
-    'a': 'x', 'b': 'w', 'c': 'e', 'd': 'r', 'e': 't', 'f': 'y', 'g': 'u', 'h': 'i', 'i': 'o', 'j': 'p',
-    'k': 'a', 'l': 's', 'm': 'd', 'n': 'f', 'o': 'g', 'p': 'h', 'q': 'j', 'r': 'k', 's': 'l', 't': 'q',
-    'u': 'z', 'v': 'c', 'w': 'v', 'x': 'b', 'y': 'n', 'z': 'm'}
-
-
-    elif test == "test3":
-        solution = {
-    'a': 's', 'b': 't', 'c': 'u', 'd': 'v', 'e': 'w',
-    'f': 'x', 'g': 'y', 'h': 'z', 'i': 'a', 'j': 'b',
-    'k': 'c', 'l': 'd', 'm': 'e', 'n': 'f', 'o': 'g',
-    'p': 'h', 'q': 'i', 'r': 'j', 's': 'k', 't': 'l',
-    'u': 'm', 'v': 'n', 'w': 'o', 'x': 'p', 'y': 'q',
-    'z': 'r'
-}   
+    'a': 'q',
+    'b': 'w',
+    'c': 'e',
+    'd': 'r',
+    'e': 't',
+    'f': 'y',
+    'g': 'u',
+    'h': 'i',
+    'i': 'o',
+    'j': 'p',
+    'k': 'a',
+    'l': 's',
+    'm': 'd',
+    'n': 'f',
+    'o': 'g',
+    'p': 'h',
+    'q': 'j',
+    'r': 'k',
+    's': 'l',
+    't': 'z',
+    'u': 'x',
+    'v': 'c',
+    'w': 'v',
+    'x': 'b',
+    'y': 'n',
+    'z': 'm'
+}
+  
     else:
         solution={'a': 'y', 'b': 'x', 'c': 'i', 'd': 'n', 'e': 't', 'f': 'o', 'g': 'z', 'h': 'j', 'i': 'c', 'j': 'e', 'k': 'b', 'l': 'l', 'm': 'd', 'n': 'u', 'o': 'k', 'p': 'm', 'q': 's', 'r': 'v', 's': 'p', 't': 'q', 'u': 'r', 'v': 'h', 'w': 'w', 'x': 'g', 'y': 'a', 'z': 'f'}
     same=0
@@ -372,9 +410,38 @@ def biased_crossover_list(fitness_scores):
 
     return new_list
 
+# This function checks if the algorithm should stop.
+def check_stop(generation, fitness):
+    if generation>70 and fitness>0.86:
+        return True
+    if fitness > 0.91:
+        return True
+    return False
 
+# This function writes the solution and the decrypted file to the files.
+def write_solution(individual,enc):
+    # Write the dictionary to a file called perm.txt.
+    with open("Genetic_Algorithms_EX2/perm.txt", "w") as file:  
+        for letter, value in individual.items():
+            file.write(letter + " " + value + "\n")
+    # Decrypt the text using the solution.
+    decrypted_text = []
+    for word in enc:
+        dec_word =""
+        for letter in word:
+            try:
+                dec_word += individual[letter]
+            except KeyError:
+                # Special letter case.
+                dec_word += letter
+        decrypted_text.append(dec_word)
+    # Write the decrypted_text to plain.txt.
+    with open("Genetic_Algorithms_EX2/plain.txt", "w") as file:
+        for word in decrypted_text:
+            file.write(word + " ")
+    
 
-# This function handles the flow of the genetic algorithm.
+# This function handles the flow of the # algorithm.
 def decryption_flow():
     fitness_history=0
     count_same_fitness=0
