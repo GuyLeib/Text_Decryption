@@ -87,7 +87,7 @@ def local_optimization(n,algo_type):
             new_individual[0][letter_1] = new_individual[0][letter_2]
             new_individual[0][letter_2] = temp
             old_fitness=individual[0][2]
-            new_fitness=fitness(new_individual)
+            new_fitness,word_pec=fitness(new_individual)
         if new_fitness>=old_fitness:
             if algo_type=="lamark":
                 new_population.append(new_individual)
