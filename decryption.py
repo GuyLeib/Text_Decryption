@@ -11,7 +11,7 @@ population_size = 100
 score1_weight = 0.5
 score2_weight = 0.3
 score3_weight = 0.2
-fitness_scores = []
+num_of_mut=1
 population=[]
 ###################### IMPORTANT ###########################
 # check if need a more relative path. 
@@ -55,9 +55,10 @@ def inversion(dict_list, rate):
 
 def mutation(dict_list, rate):
     global letters
+    global num_of_mut
     for dictionary in dict_list:
         # do the mutation over only 5 percent in the population:
-        for m in range(1):
+        for m in range(num_of_mut):
             if random.random() <= rate:
                 # choose 2 random letters:
                 letter_1 = random.choice(letters)
@@ -484,18 +485,16 @@ def decryption_flow(algo_type="classic"):
     fitness_history=0
     count_same_fitness=0
     rate = 0.1
-    global score1_weight, score2_weight, score3_weight
+    global score1_weight, score2_weight, score3_weight,num_of_mut
     generations = 1000
     population = create_permutations()
-    former_avg_score = 0
-    convergence=0
     for i in range(generations):
         # Store the calculated fitness score for each individual and the individual.
         global fitness_scores
         if algo_type == "classic" or i==0:
             fitness_scores=[]
             for individual in population:
-                total_score=fitness(individual,test2)
+                total_score=fitness(individual)
                 fitness_scores.append((individual, total_score))
 
         # Sort the population by descending fitness score.
@@ -506,13 +505,18 @@ def decryption_flow(algo_type="classic"):
             population=[individual[0] for individual in fitness_scores]
         # Print the best solution in the current generation.
         print("Generation: " + str(i)  + " Fitness score: " + str(
-            fitness_scores[0][1]) + " success percent: " + str(how_close_to_real_dict(fitness_scores[0][0],"test2")))
-        if abs(former_avg_score-new_avg_score)<=1:
-            convergence+=1
+            fitness_scores[0][1]) + " success percent: " + str(how_close_to_real_dict(fitness_scores[0][0],"enc")))
+        if fitness_history==fitness_scores[0][1]:
+            count_same_fitness+=1
         else:
-            convergence=0
-        if convergence==10:
-            return
+            count_same_fitness=0
+        fitness_history=fitness_scores[0][1]
+        if count_same_fitness>1:
+            num_of_mut+=1
+        elif count_same_fitness==0 and num_of_mut>1:
+            num_of_mut-=1
+        if count_same_fitness>5:
+            exit(1)
 
         # Create a list of the top 40-70% individuals of the population - for crossover.
         crossover_list = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.8)]]
