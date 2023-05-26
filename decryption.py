@@ -3,12 +3,13 @@ import numpy as np
 import itertools
 import  random
 import copy
+import math
 from bisect import bisect_left
 random.seed(147)
 letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
-population_size = 1000
-score1_weight = 0.1
-score2_weight = 0.7
+population_size = 100
+score1_weight = 0.5
+score2_weight = 0.3
 score3_weight = 0.2
 fitness_scores = []
 population=[]
@@ -56,7 +57,7 @@ def mutation(dict_list, rate):
     global letters
     for dictionary in dict_list:
         # do the mutation over only 5 percent in the population:
-        for m in range(5):
+        for m in range(1):
             if random.random() <= rate:
                 # choose 2 random letters:
                 letter_1 = random.choice(letters)
@@ -131,7 +132,7 @@ def crossover(dict_list, next_gen_size):
     indexes_dict = {}
     for i in range(26):
         indexes_dict[i] = letters[i]
-    for i in range(int(next_gen_size/2)):
+    for i in range(int(next_gen_size)):
 
         # choose 2 random parents:
         parent_1 = random.choice(dict_list)
@@ -158,7 +159,7 @@ def crossover(dict_list, next_gen_size):
         child_2 = replace_dup(child_2)
         # add the new dicts to the crossover list:
         crossover_results_list.append(child_1)
-        crossover_results_list.append(child_2)
+        #crossover_results_list.append(child_2)
 
     return crossover_results_list
 
@@ -363,7 +364,7 @@ def fitness(individual,enc=enc):
     score2 = common_letters_score(decrypted_text)
     # Calculate the score based of the frequency of the most common bigrams in the english language.
     score3 = common_bigrams_score(decrypted_text)
-    # Calculate the total fitness score 
+    # Calculate the total fitness score
     total_score = score1_weight*score1 + score2_weight*score2 + score3_weight*score3
     return total_score
     
@@ -437,14 +438,13 @@ def how_close_to_real_dict(dict,test):
     return same/26
 
 
-def biased_crossover_list(fitness_scores):
-    total_score_sum = sum(score[2] for score in fitness_scores)
+def biased_crossover_list(crossover_list):
+    total_score_sum = sum(score[1] for score in crossover_list)
     new_list=[]
     for individual in fitness_scores:
-        amount=int(individual[2]*total_score_sum)
-        for i in range(amount):
-            new_list.append(individual)
-
+        relative_score=(math.ceil(individual[1] * 10))+1
+        for i in range(int(relative_score)):
+            new_list.append(individual[0])
     return new_list
 
 # This function checks if the algorithm should stop.
@@ -483,71 +483,64 @@ def decryption_flow(algo_type="classic"):
     global population
     fitness_history=0
     count_same_fitness=0
-    rate = 0.2
+    rate = 0.1
     global score1_weight, score2_weight, score3_weight
     generations = 1000
     population = create_permutations()
+    former_avg_score = 0
+    convergence=0
     for i in range(generations):
-        # Adapt the weights of the fitness scores.
-        if i==0:
-            score1_weight = 0.7
-            score2_weight = 0.2
-            score3_weight = 0.1
         # Store the calculated fitness score for each individual and the individual.
         global fitness_scores
         if algo_type == "classic" or i==0:
             fitness_scores=[]
             for individual in population:
-                total_score=fitness(individual)
+                total_score=fitness(individual,test2)
                 fitness_scores.append((individual, total_score))
+
         # Sort the population by descending fitness score.
+        new_avg_score=sum(item[1] for item in fitness_scores)/len(fitness_scores[1])
         fitness_scores.sort(key=lambda x: x[1], reverse=True)
-        print("Generation: " + str(i)  + " Fitness score: " + str(
-            fitness_scores[0][1]) + " success percent: " + str(how_close_to_real_dict(fitness_scores[0][0],"enc")))
+        if i > 0:
+            fitness_scores = [individual for individual in fitness_scores[0:100]]
+            population=[individual[0] for individual in fitness_scores]
         # Print the best solution in the current generation.
-        if (fitness_history==fitness_scores[0][1]):
-            count_same_fitness+=1
+        print("Generation: " + str(i)  + " Fitness score: " + str(
+            fitness_scores[0][1]) + " success percent: " + str(how_close_to_real_dict(fitness_scores[0][0],"test2")))
+        if abs(former_avg_score-new_avg_score)<=1:
+            convergence+=1
         else:
-            count_same_fitness=0
-        fitness_history=fitness_scores[0][1]
-        # if i%2==0 and i<30:
-        #     fitness_scores = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.1)]]
-        if count_same_fitness>=1:
-            if rate<=0.8:
-                rate=rate*1.2
-            # if count_same_fitness>4:
-            #     global population_size
-            #     population_size+=100
-            if population_size>100:
-                fitness_scores = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.2)]]
-                population=[individual[0] for individual in fitness_scores]
-        elif count_same_fitness==0:
-            rate=rate*0.8
-            # population_size -= 100
+            convergence=0
+        if convergence==10:
+            return
 
         # Create a list of the top 40-70% individuals of the population - for crossover.
-        crossover_list = [individual[0] for individual in fitness_scores[0:int(len(fitness_scores) * 0.3)]]
-        #new_crossover_list = biased_crossover_list(crossover_list)
+        crossover_list = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.8)]]
+        new_crossover_list = biased_crossover_list(crossover_list)
         # Create a list of the top 70-90% of the population - for replication
         #replication_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.1):int(len(fitness_scores)*0.2)]]
         # Create a list of the top 90-100% of the population - elitism.
-        elitism_list = [individual[0] for individual in fitness_scores[0:int(len(fitness_scores)*0.05)]]
+        #elitism_list = [individual[0] for individual in fitness_scores[0:int(len(fitness_scores)*0.05)]]
 
-        elitism_to_mutate = copy.deepcopy(elitism_list)
+        #elitism_to_mutate = copy.deepcopy(elitism_list)
         # Reset the population.
-        population = []
         new_population = []
+        new_population.extend(population)
+        crossover_to_append=crossover(new_crossover_list,len(new_crossover_list))
         # Create a new population using crossover.
-        new_population = crossover(crossover_list, population_size)
+        new_population.extend(crossover_to_append)
+
         # Add the replication list to the new population.
         #new_population.extend(replication_list)
         # Mutate the new population.
-        new_population = inversion(new_population, rate)
+
+        #new_population = inversion(new_population, rate)
         new_population = mutation(new_population, rate)
-        elitism_to_mutate = mutation(elitism_to_mutate, 1)
-        new_population.extend(elitism_to_mutate)
+        new_population.extend(population)
+        #elitism_to_mutate = mutation(elitism_to_mutate, 1)
+        #new_population.extend(elitism_to_mutate)
         # Add the elitism list to the new population.
-        new_population.extend(elitism_list)
+        #new_population.extend(elitism_list)
         # Replace the old population with the new population.
         population = copy.deepcopy(new_population)
         if algo_type!="classic":
@@ -698,5 +691,5 @@ def testing():
 
 
 
-decryption_flow("darwin")
+decryption_flow()
 #testing()
