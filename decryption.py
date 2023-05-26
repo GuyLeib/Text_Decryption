@@ -516,6 +516,7 @@ def decryption_flow(algo_type="classic"):
         elif count_same_fitness==0 and num_of_mut>1:
             num_of_mut-=1
         if count_same_fitness>5:
+            write_solution(fitness_scores[0][0],enc)
             exit(1)
 
         # Create a list of the top 40-70% individuals of the population - for crossover.
