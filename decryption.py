@@ -11,6 +11,7 @@ score1_weight = 0.1
 score2_weight = 0.7
 score3_weight = 0.2
 fitness_scores = []
+population=[]
 ###################### IMPORTANT ###########################
 # check if need a more relative path. 
 
@@ -55,7 +56,7 @@ def mutation(dict_list, rate):
     global letters
     for dictionary in dict_list:
         # do the mutation over only 5 percent in the population:
-        for m in range(3):
+        for m in range(5):
             if random.random() <= rate:
                 # choose 2 random letters:
                 letter_1 = random.choice(letters)
@@ -74,29 +75,32 @@ def local_optimization(n,algo_type):
     global fitness_scores
     new_population=[]
     new_fitness_scores=[]
-    for individual in fitness_scores:
+    for individual in population:
+        new_individual = copy.deepcopy(individual)
+        new_fitness=0
         for i in range(n):
-            new_individual = copy.deepcopy(individual)
             # choose 2 random letters:
             letter_1 = random.choice(letters)
             letter_2 = random.choice(letters)
             while letter_2 == letter_1:
                 letter_2 = random.choice(letters)
             # swap values between 2 keys:
-            temp = individual[0][letter_1]
-            new_individual[0][letter_1] = new_individual[0][letter_2]
-            new_individual[0][letter_2] = temp
-            old_fitness=individual[0][2]
-            new_fitness,word_pec=fitness(new_individual)
-        if new_fitness>=old_fitness:
-            if algo_type=="lamark":
-                new_population.append(new_individual)
-            else:
-                individual[2]=new_individual[2]
-                new_population.append(individual)
-            new_fitness_scores.append(individual)
-        fitness_scores=copy.deepcopy(new_fitness_scores)
-        population=copy.deepcopy(new_population)
+            temp = individual[letter_1]
+            new_individual[letter_1] = new_individual[letter_2]
+            new_individual[letter_2] = temp
+            old_fitness=fitness(individual)
+            new_fitness=fitness(new_individual)
+            if new_fitness<old_fitness:
+                new_individual= copy.deepcopy(individual)
+                new_fitness=old_fitness
+        if algo_type=="lamark":
+            new_population.append(new_individual)
+            new_fitness_scores.append((new_individual,new_fitness))
+        else:
+            new_population.append(individual)
+            new_fitness_scores.append((individual,new_fitness))
+    fitness_scores = copy.deepcopy(new_fitness_scores)
+    population = copy.deepcopy(new_population)
 
 
 def replace_dup(dictionary):
@@ -128,6 +132,7 @@ def crossover(dict_list, next_gen_size):
     for i in range(26):
         indexes_dict[i] = letters[i]
     for i in range(int(next_gen_size/2)):
+
         # choose 2 random parents:
         parent_1 = random.choice(dict_list)
         parent_2 = random.choice(dict_list)
@@ -163,11 +168,11 @@ def crossover(dict_list, next_gen_size):
 
 # This function import and organize the helper files.
 def import_helper_files():
-    common_words = open("dict.txt", "r").read().split("\n")
+    common_words = open("Genetic_Algorithms_EX2/dict.txt", "r").read().split("\n")
     # Filter empty lines
     common_words = [word.lower() for word in common_words if word != ""]
     # Import common letters.
-    common_letters = open("Letter_Freq.txt", "r").read().split("\n")
+    common_letters = open("Genetic_Algorithms_EX2/Letter_Freq.txt", "r").read().split("\n")
     # store in dictionary
     common_letters_dict = {}
     common_letters = [letter.split("\t") for letter in common_letters]
@@ -176,7 +181,7 @@ def import_helper_files():
             common_letters_dict[letter[1].lower()] = letter[0]
         except IndexError:  
             continue
-    common_bigrams = open("Letter2_Freq.txt", "r").read().split("\n")
+    common_bigrams = open("Genetic_Algorithms_EX2/Letter2_Freq.txt", "r").read().split("\n")
     common_bigrams_dict = {}
     common_bigrams = [bigram.split("\t") for bigram in common_bigrams]
     for bigram in common_bigrams:
@@ -185,15 +190,15 @@ def import_helper_files():
                 common_bigrams_dict[bigram[1].lower()] = bigram[0]
         except IndexError:
             continue
-    with open('enc.txt', 'r') as file:
+    with open('Genetic_Algorithms_EX2/enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     enc = text.split()
-    with open('test1enc.txt', 'r') as file:
+    with open('Genetic_Algorithms_EX2/test1enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     test1 = text.split()
-    with open('test2enc.txt', 'r') as file:
+    with open('Genetic_Algorithms_EX2/test2enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     test2 = text.split()
@@ -475,6 +480,7 @@ def write_solution(individual,enc):
 
 # This function handles the flow of the # algorithm.
 def decryption_flow(algo_type="classic"):
+    global population
     fitness_history=0
     count_same_fitness=0
     rate = 0.2
@@ -489,22 +495,21 @@ def decryption_flow(algo_type="classic"):
             score3_weight = 0.1
         # Store the calculated fitness score for each individual and the individual.
         global fitness_scores
-        if algo_type=="classic":
+        if algo_type == "classic" or i==0:
             fitness_scores=[]
             for individual in population:
-                words_perc, total_score=fitness(individual)
-                fitness_scores.append((individual,words_perc, total_score))
+                total_score=fitness(individual)
+                fitness_scores.append((individual, total_score))
         # Sort the population by descending fitness score.
-        fitness_scores.sort(key=lambda x: x[2], reverse=True)
-        best_solution=fitness_scores[0]
-        print("Generation: " + str(i) + " Best solution: " + str(fitness_scores[0][0]) + " Fitness score: " + str(
-            fitness_scores[0][2]) + " success percent: " + str(how_close_to_real_dict((fitness_scores[0][0]))))
+        fitness_scores.sort(key=lambda x: x[1], reverse=True)
+        print("Generation: " + str(i)  + " Fitness score: " + str(
+            fitness_scores[0][1]) + " success percent: " + str(how_close_to_real_dict(fitness_scores[0][0],"enc")))
         # Print the best solution in the current generation.
-        if (fitness_history==fitness_scores[0][2]):
+        if (fitness_history==fitness_scores[0][1]):
             count_same_fitness+=1
         else:
             count_same_fitness=0
-        fitness_history=fitness_scores[0][2]
+        fitness_history=fitness_scores[0][1]
         # if i%2==0 and i<30:
         #     fitness_scores = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.1)]]
         if count_same_fitness>=1:
@@ -513,7 +518,9 @@ def decryption_flow(algo_type="classic"):
             # if count_same_fitness>4:
             #     global population_size
             #     population_size+=100
-            fitness_scores = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.2)]]
+            if population_size>100:
+                fitness_scores = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.2)]]
+                population=[individual[0] for individual in fitness_scores]
         elif count_same_fitness==0:
             rate=rate*0.8
             # population_size -= 100
@@ -543,10 +550,10 @@ def decryption_flow(algo_type="classic"):
         new_population.extend(elitism_list)
         # Replace the old population with the new population.
         population = copy.deepcopy(new_population)
-    if algo_type!="classic":
-        # perform local optimization:
-        n=5
-        fitness_scores=local_optimization(fitness_scores,n,algo_type)
+        if algo_type!="classic":
+            # perform local optimization:
+            n=3
+            local_optimization(n,algo_type)
 
 
 
@@ -691,5 +698,5 @@ def testing():
 
 
 
-#decryption_flow()
-testing()
+decryption_flow("darwin")
+#testing()
