@@ -1,5 +1,6 @@
 import string
 import numpy as np
+import csv
 import itertools
 import  random
 import copy
@@ -13,6 +14,8 @@ score2_weight = 0.3
 score3_weight = 0.2
 num_of_mut=1
 population=[]
+statistics_per_generation=[]
+n=1
 ###################### IMPORTANT ###########################
 # check if need a more relative path. 
 
@@ -170,11 +173,11 @@ def crossover(dict_list, next_gen_size):
 
 # This function import and organize the helper files.
 def import_helper_files():
-    common_words = open("Genetic_Algorithms_EX2/dict.txt", "r").read().split("\n")
+    common_words = open("dict.txt", "r").read().split("\n")
     # Filter empty lines
     common_words = [word.lower() for word in common_words if word != ""]
     # Import common letters.
-    common_letters = open("Genetic_Algorithms_EX2/Letter_Freq.txt", "r").read().split("\n")
+    common_letters = open("Letter_Freq.txt", "r").read().split("\n")
     # store in dictionary
     common_letters_dict = {}
     common_letters = [letter.split("\t") for letter in common_letters]
@@ -183,7 +186,7 @@ def import_helper_files():
             common_letters_dict[letter[1].lower()] = letter[0]
         except IndexError:  
             continue
-    common_bigrams = open("Genetic_Algorithms_EX2/Letter2_Freq.txt", "r").read().split("\n")
+    common_bigrams = open("Letter2_Freq.txt", "r").read().split("\n")
     common_bigrams_dict = {}
     common_bigrams = [bigram.split("\t") for bigram in common_bigrams]
     for bigram in common_bigrams:
@@ -192,15 +195,15 @@ def import_helper_files():
                 common_bigrams_dict[bigram[1].lower()] = bigram[0]
         except IndexError:
             continue
-    with open('Genetic_Algorithms_EX2/enc.txt', 'r') as file:
+    with open('enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     enc = text.split()
-    with open('Genetic_Algorithms_EX2/test1enc.txt', 'r') as file:
+    with open('enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     test1 = text.split()
-    with open('Genetic_Algorithms_EX2/test2enc.txt', 'r') as file:
+    with open('test2enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     test2 = text.split()
@@ -459,7 +462,7 @@ def check_stop(generation, fitness):
 # This function writes the solution and the decrypted file to the files.
 def write_solution(individual,enc):
     # Write the dictionary to a file called perm.txt.
-    with open("Genetic_Algorithms_EX2/perm.txt", "w") as file:  
+    with open("perm.txt", "w") as file:
         for letter, value in individual.items():
             file.write(letter + " " + value + "\n")
     # Decrypt the text using the solution.
@@ -474,7 +477,7 @@ def write_solution(individual,enc):
                 dec_word += letter
         decrypted_text.append(dec_word)
     # Write the decrypted_text to plain.txt.
-    with open("Genetic_Algorithms_EX2/plain.txt", "w") as file:
+    with open("plain.txt", "w") as file:
         for word in decrypted_text:
             file.write(word + " ")
     
@@ -498,9 +501,11 @@ def decryption_flow(algo_type="classic"):
                 fitness_scores.append((individual, total_score))
 
         # Sort the population by descending fitness score.
-        new_avg_score=sum(item[1] for item in fitness_scores)/len(fitness_scores[1])
+        avg_score=sum(item[1] for item in fitness_scores)/len(fitness_scores[1])
         fitness_scores.sort(key=lambda x: x[1], reverse=True)
+        statistics_per_generation.append((fitness_scores[0][1],avg_score,fitness_scores[-1][1]))
         if i > 0:
+            # Keep only the 100 highest individuals to next generation:
             fitness_scores = [individual for individual in fitness_scores[0:100]]
             population=[individual[0] for individual in fitness_scores]
         # Print the best solution in the current generation.
@@ -550,7 +555,7 @@ def decryption_flow(algo_type="classic"):
         population = copy.deepcopy(new_population)
         if algo_type!="classic":
             # perform local optimization:
-            n=3
+            global n
             local_optimization(n,algo_type)
 
 
@@ -694,7 +699,32 @@ def testing():
         population3 = copy.deepcopy(new_population3)
 
 
+def comapre_algos():
+    n_list = [1, 5, 10, 15]
+    with open('data.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        table_headers = ['generation', 'best', 'avg', 'bad']
+    # run lamark algo and save results:
+    global n,statistics_per_generation
+    for num in n_list:
+        n=num
+        decryption_flow("lamark")
+        title = ['lamark:' + str(n), ' ']
+        writer.writerow(title)
+        writer.writerow(table_headers)
+        for row in statistics_per_generation:
+            writer.writerow(row)
+        writer.writerow([])
+    statistics_per_generation=[]
+    # run darwin algo and save results:
+    for num in n_list:
+        n=num
+        decryption_flow("darwin")
 
 
-decryption_flow()
+
+
+
+
+decryption_flow("darwin")
 #testing()
