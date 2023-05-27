@@ -1,25 +1,29 @@
 import string
-import numpy as np
-import csv
 import itertools
-import  random
+import random
 import copy
 import math
 from bisect import bisect_left
+import tkinter as tk
+from tkinter import ttk
+import threading
+import csv
+
 random.seed(147)
-letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+           'w', 'x', 'y', 'z']
 population_size = 100
 score1_weight = 0.5
 score2_weight = 0.3
 score3_weight = 0.2
-num_of_mut=1
-population=[]
-statistics_per_generation=[]
-fitness_scores=[]
-n=1
-fitness_calling=0
-###################### IMPORTANT ###########################
-# check if need a more relative path. 
+num_of_mut = 1
+population = []
+statistics_per_generation = []
+fitness_scores = []
+n = 1
+fitness_calling = 0
+algo_type="classic"
+
 
 # This function creates all the possible permutations of the cipher:
 def create_permutations():
@@ -27,7 +31,8 @@ def create_permutations():
     permutations = []
     global population_size
     global letters
-    letters_for_perm = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+    letters_for_perm = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
+                        't', 'u', 'v', 'w', 'x', 'y', 'z']
     for i in range(population_size):
         random.shuffle(letters_for_perm)
         dictionary = {}
@@ -39,20 +44,20 @@ def create_permutations():
 
 def inversion(dict_list, rate):
     global letters
-    
+
     for dictionary in dict_list:
-         if random.random() <=rate:
+        if random.random() <= rate:
             # choose 2 random letters:
             letter_1 = random.choice(letters)
-            while letter_1=='x' or letter_1=='y'or letter_1=='z':
+            while letter_1 == 'x' or letter_1 == 'y' or letter_1 == 'z':
                 letter_1 = random.choice(letters)
             index = letters.index(letter_1)
             # swap values between 2 keys:
-            temp=dictionary[letters[index]]
-            dictionary[letters[index]] = dictionary[letters[index+3]]
-            dictionary[letters[index+3]] = temp
-            temp=dictionary[letters[index+1]]
-            dictionary[letters[index+1]] = dictionary[letters[index + 2]]
+            temp = dictionary[letters[index]]
+            dictionary[letters[index]] = dictionary[letters[index + 3]]
+            dictionary[letters[index + 3]] = temp
+            temp = dictionary[letters[index + 1]]
+            dictionary[letters[index + 1]] = dictionary[letters[index + 2]]
             dictionary[letters[index + 2]] = temp
 
     return dict_list
@@ -76,15 +81,16 @@ def mutation(dict_list, rate):
                 dictionary[letter_2] = temp
     return dict_list
 
-def local_optimization(n,algo_type):
+
+def local_optimization(n, algo_type):
     global letters
     global population
     global fitness_scores
-    new_population=[]
-    new_fitness_scores=[]
+    new_population = []
+    new_fitness_scores = []
     for individual in population:
         new_individual = copy.deepcopy(individual)
-        new_fitness=0
+        new_fitness = 0
         for i in range(n):
             # choose 2 random letters:
             letter_1 = random.choice(letters)
@@ -95,17 +101,17 @@ def local_optimization(n,algo_type):
             temp = individual[letter_1]
             new_individual[letter_1] = new_individual[letter_2]
             new_individual[letter_2] = temp
-            old_fitness=fitness(individual)
-            new_fitness=fitness(new_individual)
-            if new_fitness<old_fitness:
-                new_individual= copy.deepcopy(individual)
-                new_fitness=old_fitness
-        if algo_type=="lamark":
+            old_fitness = fitness(individual)
+            new_fitness = fitness(new_individual)
+            if new_fitness < old_fitness:
+                new_individual = copy.deepcopy(individual)
+                new_fitness = old_fitness
+        if algo_type == "lamark":
             new_population.append(new_individual)
-            new_fitness_scores.append((new_individual,new_fitness))
+            new_fitness_scores.append((new_individual, new_fitness))
         else:
             new_population.append(individual)
-            new_fitness_scores.append((individual,new_fitness))
+            new_fitness_scores.append((individual, new_fitness))
     fitness_scores = copy.deepcopy(new_fitness_scores)
     population = copy.deepcopy(new_population)
 
@@ -129,7 +135,6 @@ def replace_dup(dictionary):
     return updated_dict
 
 
-
 def crossover(dict_list, next_gen_size):
     # create a new list of dictionaries
     crossover_results_list = []
@@ -145,7 +150,7 @@ def crossover(dict_list, next_gen_size):
         parent_2 = random.choice(dict_list)
         # make sure the parents are not the same:
         while parent_1 is parent_2:
-            parent_2=random.choice(dict_list)
+            parent_2 = random.choice(dict_list)
         # create new dict that will be the child:
         child_1 = {}
         child_2 = {}
@@ -153,7 +158,7 @@ def crossover(dict_list, next_gen_size):
         r = random.randint(1, 24)
         # insert to the child the first r values from the first parent:
         for j in range(r):
-            key_for_child=indexes_dict[j]
+            key_for_child = indexes_dict[j]
             child_1[key_for_child] = parent_1[key_for_child]
             child_2[key_for_child] = parent_2[key_for_child]
         for k in range(r, 26, 1):
@@ -165,12 +170,10 @@ def crossover(dict_list, next_gen_size):
         child_2 = replace_dup(child_2)
         # add the new dicts to the crossover list:
         crossover_results_list.append(child_1)
-        #crossover_results_list.append(child_2)
+        # crossover_results_list.append(child_2)
 
     return crossover_results_list
 
-    # choose random index (bigger than 1)
-    # take the first part of the first dictionary until the index and than take the rest from the second dictionary
 
 
 # This function import and organize the helper files.
@@ -186,14 +189,14 @@ def import_helper_files():
     for letter in common_letters:
         try:
             common_letters_dict[letter[1].lower()] = letter[0]
-        except IndexError:  
+        except IndexError:
             continue
     common_bigrams = open("Letter2_Freq.txt", "r").read().split("\n")
     common_bigrams_dict = {}
     common_bigrams = [bigram.split("\t") for bigram in common_bigrams]
     for bigram in common_bigrams:
         try:
-            if bigram[1]!= "" and len(bigram[1]) == 2:
+            if bigram[1] != "" and len(bigram[1]) == 2:
                 common_bigrams_dict[bigram[1].lower()] = bigram[0]
         except IndexError:
             continue
@@ -210,19 +213,11 @@ def import_helper_files():
         # split the text into words
     test2 = text.split()
     return common_words, common_letters_dict, common_bigrams_dict, enc, test1, test2
+
+
 # Import the helper files.
-common_words, common_letters_dict, common_bigrams_dict, enc, test1,test2 = import_helper_files()
+common_words, common_letters_dict, common_bigrams_dict, enc, test1, test2 = import_helper_files()
 
-
-
-# This function calculate the KL divergence between two distributions.
-def kl_divergence(p, q):
-    # Adding a small constant to p and q to avoid division by zero
-    epsilon = 1e-10
-    p = np.maximum(p, epsilon)
-    q = np.maximum(q, epsilon)
-    kl = np.sum(p * np.log(p / q))
-    return kl
 
 # This function calculate a score based on how many common words are in the solution.
 def common_words_score(decrypted_text):
@@ -237,6 +232,7 @@ def common_words_score(decrypted_text):
     score = score / total_words
     return score
 
+
 # This function calculate a score based on how many common letters are in the solution.
 def common_letters_score(decrypted_text):
     # Calculate each letter frequency in the text.
@@ -246,7 +242,7 @@ def common_letters_score(decrypted_text):
         for letter in word:
             if letter in letter_freq:
                 letter_freq[letter] += 1
-                total_letters +=1
+                total_letters += 1
             else:
                 letter_freq[letter] = 1
                 total_letters += 1
@@ -254,17 +250,18 @@ def common_letters_score(decrypted_text):
     # Normalize to achieve frequency.
     for letter in letter_freq:
         letter_freq[letter] = letter_freq[letter] / total_letters
-    
+
     # Calculate the score.
     score = 0
     for letter, freq in letter_freq.items():
         if letter in common_letters_dict:
-            score += (letter_freq[letter] - float(common_letters_dict[letter]))**2
+            score += (letter_freq[letter] - float(common_letters_dict[letter])) ** 2
     score = score ** 0.5
     # normalize the score to be between 0 and 1
-    #score = 1 - (score / len(common_letters_dict))
+    # score = 1 - (score / len(common_letters_dict))
     score = 1 - score
     return score
+
 
 # This function calculate a score based on how many common bigrams are in the solution.
 def common_bigrams_score(decrypted_text):
@@ -272,8 +269,8 @@ def common_bigrams_score(decrypted_text):
     bigram_freq = {}
     total_bigrams = 0
     for word in decrypted_text:
-        for i in range(len(word)-1):
-            bigram = word[i:i+2]
+        for i in range(len(word) - 1):
+            bigram = word[i:i + 2]
             if bigram in bigram_freq:
                 bigram_freq[bigram] += 1
                 total_bigrams += 1
@@ -290,12 +287,12 @@ def common_bigrams_score(decrypted_text):
         except KeyError:
             continue
         final_bigram_freq[bigram] = bigram_freq[bigram] / total_bigrams
-    
+
     # Calculate the score.
     score = 0
     for bigram, freq in final_bigram_freq.items():
         if bigram in known_bigrams_freq:
-            score += (final_bigram_freq[bigram] - float(known_bigrams_freq[bigram]))**2
+            score += (final_bigram_freq[bigram] - float(known_bigrams_freq[bigram])) ** 2
 
     score = score ** 0.5
 
@@ -304,58 +301,14 @@ def common_bigrams_score(decrypted_text):
     return score
 
 
-# # This function calculate a score based on how many common bigrams are in the solution.
-# def common_bigrams_score(decrypted_text):
-#     # Calculate each bigram frequency in the decrypted text.
-#     bigram_freq = {}
-#     known_bigrams_freq = {}
-#     total_bigrams = 0
-#     for word in decrypted_text:
-#         for i in range(len(word) - 1):
-#             bigram = word[i] + word[i + 1]
-#             if bigram in bigram_freq:
-#                 bigram_freq[bigram] += 1
-#             else:
-#                 bigram_freq[bigram] = 1
-#             total_bigrams += 1
-
-#     final_bigram_freq = {}
-#     # Normalize to achieve frequency.
-#     for bigram in bigram_freq:
-#         try:
-#             known_bigrams_freq[bigram] = common_bigrams_dict[bigram]
-#         except KeyError:
-#             continue
-#         final_bigram_freq[bigram] = bigram_freq[bigram] / total_bigrams
-
-#     # Calculate the score.
-#     p = np.array([final_bigram_freq[bigram] for bigram in final_bigram_freq.keys()])
-#     q = np.array([float(known_bigrams_freq[bigram]) for bigram in known_bigrams_freq.keys()])
-
-#     # Adding a small constant to p and q to avoid division by zero
-#     epsilon = 1e-10
-#     p = np.maximum(p, epsilon)
-#     q = np.maximum(q, epsilon)
-
-#     # Calculate the score.
-#     score = kl_divergence(p, q)
-
-#     normalized_score = 1 - np.exp(-score)
-#     # Normalize the score between 0 and 1
-#     max_score = kl_divergence(p, p)
-#     score = 1 - (score / max_score)
-
-#     return score
-
-
-# This function calculate the fitness score of a given individual = solution. 
-def fitness(individual,enc=enc):
-    global score1_weight, score2_weight, score3_weight ,fitness_calling
-    fitness_calling+=1
+# This function calculate the fitness score of a given individual = solution.
+def fitness(individual, enc=enc):
+    global score1_weight, score2_weight, score3_weight, fitness_calling
+    fitness_calling += 1
     # Create the new text using the solution.
     decrypted_text = []
     for word in enc:
-        dec_word =""
+        dec_word = ""
         for letter in word:
             try:
                 dec_word += individual[letter]
@@ -364,7 +317,6 @@ def fitness(individual,enc=enc):
                 dec_word += letter
         decrypted_text.append(dec_word)
 
-
     # Calculate score based of the frequency of the most common words in the english language.
     score1 = common_words_score(decrypted_text)
     # Calculate score based of the frequency of the most common letters in the english language.
@@ -372,98 +324,103 @@ def fitness(individual,enc=enc):
     # Calculate the score based of the frequency of the most common bigrams in the english language.
     score3 = common_bigrams_score(decrypted_text)
     # Calculate the total fitness score
-    total_score = score1_weight*score1 + score2_weight*score2 + score3_weight*score3
+    total_score = score1_weight * score1 + score2_weight * score2 + score3_weight * score3
     return total_score
-    
-def how_close_to_real_dict(dict,test):
-    if test=="test1":
+
+
+def how_close_to_real_dict(dict, test):
+    if test == "test1":
         solution = {
-    'a': 'q',
-    'b': 'w',
-    'c': 'e',
-    'd': 'r',
-    'e': 't',
-    'f': 'y',
-    'g': 'u',
-    'h': 'i',
-    'i': 'o',
-    'j': 'p',
-    'k': 'a',
-    'l': 's',
-    'm': 'd',
-    'n': 'f',
-    'o': 'g',
-    'p': 'h',
-    'q': 'k',
-    'r': 'j',
-    's': 'l',
-    't': 'z',
-    'u': 'x',
-    'v': 'c',
-    'w': 'v',
-    'x': 'b',
-    'y': 'n',
-    'z': 'm'
-}
+            'a': 'q',
+            'b': 'w',
+            'c': 'e',
+            'd': 'r',
+            'e': 't',
+            'f': 'y',
+            'g': 'u',
+            'h': 'i',
+            'i': 'o',
+            'j': 'p',
+            'k': 'a',
+            'l': 's',
+            'm': 'd',
+            'n': 'f',
+            'o': 'g',
+            'p': 'h',
+            'q': 'k',
+            'r': 'j',
+            's': 'l',
+            't': 'z',
+            'u': 'x',
+            'v': 'c',
+            'w': 'v',
+            'x': 'b',
+            'y': 'n',
+            'z': 'm'
+        }
 
     elif test == "test2":
-        solution  = {
-    'a': 'q',
-    'b': 'w',
-    'c': 'e',
-    'd': 'r',
-    'e': 't',
-    'f': 'y',
-    'g': 'u',
-    'h': 'i',
-    'i': 'o',
-    'j': 'p',
-    'k': 'a',
-    'l': 's',
-    'm': 'd',
-    'n': 'f',
-    'o': 'g',
-    'p': 'h',
-    'q': 'j',
-    'r': 'k',
-    's': 'l',
-    't': 'z',
-    'u': 'x',
-    'v': 'c',
-    'w': 'v',
-    'x': 'b',
-    'y': 'n',
-    'z': 'm'
-}
-  
+        solution = {
+            'a': 'q',
+            'b': 'w',
+            'c': 'e',
+            'd': 'r',
+            'e': 't',
+            'f': 'y',
+            'g': 'u',
+            'h': 'i',
+            'i': 'o',
+            'j': 'p',
+            'k': 'a',
+            'l': 's',
+            'm': 'd',
+            'n': 'f',
+            'o': 'g',
+            'p': 'h',
+            'q': 'j',
+            'r': 'k',
+            's': 'l',
+            't': 'z',
+            'u': 'x',
+            'v': 'c',
+            'w': 'v',
+            'x': 'b',
+            'y': 'n',
+            'z': 'm'
+        }
+
     else:
-        solution={'a': 'y', 'b': 'x', 'c': 'i', 'd': 'n', 'e': 't', 'f': 'o', 'g': 'z', 'h': 'j', 'i': 'c', 'j': 'e', 'k': 'b', 'l': 'l', 'm': 'd', 'n': 'u', 'o': 'k', 'p': 'm', 'q': 's', 'r': 'v', 's': 'p', 't': 'q', 'u': 'r', 'v': 'h', 'w': 'w', 'x': 'g', 'y': 'a', 'z': 'f'}
-    same=0
+        solution = {'a': 'y', 'b': 'x', 'c': 'i', 'd': 'n', 'e': 't', 'f': 'o', 'g': 'z', 'h': 'j', 'i': 'c', 'j': 'e',
+                    'k': 'b', 'l': 'l', 'm': 'd', 'n': 'u', 'o': 'k', 'p': 'm', 'q': 's', 'r': 'v', 's': 'p', 't': 'q',
+                    'u': 'r', 'v': 'h', 'w': 'w', 'x': 'g', 'y': 'a', 'z': 'f'}
+    same = 0
     for key in dict.keys():
         if dict[key] == solution[key]:
-            same+=1
-    return same/26
+            same += 1
+    return same / 26
 
 
 def biased_crossover_list(crossover_list):
     total_score_sum = sum(score[1] for score in crossover_list)
-    new_list=[]
+    new_list = []
     for individual in fitness_scores:
-        relative_score=(math.ceil(individual[1] * 10))+1
+        relative_score = (math.ceil(individual[1] * 10)) + 1
         for i in range(int(relative_score)):
             new_list.append(individual[0])
     return new_list
 
+
 # This function checks if the algorithm should stop.
 def check_stop(generation, fitness):
-    if generation>70 and fitness>0.86:
+    if generation > 70 and fitness > 0.86:
         return True
     if fitness > 0.91:
         return True
     return False
 
+
 # This function writes the solution and the decrypted file to the files.
-def write_solution(individual,enc):
+def write_solution(individual, enc):
     # Write the dictionary to a file called perm.txt.
     with open("perm.txt", "w") as file:
         for letter, value in individual.items():
@@ -471,7 +428,7 @@ def write_solution(individual,enc):
     # Decrypt the text using the solution.
     decrypted_text = []
     for word in enc:
-        dec_word =""
+        dec_word = ""
         for letter in word:
             try:
                 dec_word += individual[letter]
@@ -483,30 +440,33 @@ def write_solution(individual,enc):
     with open("plain.txt", "w") as file:
         for word in decrypted_text:
             file.write(word + " ")
-    
+
 
 # This function handles the flow of the # algorithm.
-def decryption_flow(algo_type="classic"):
+def decryption_flow():
     global population
-    fitness_history=0
-    count_same_fitness=0
+    global algo_type
+    algo_type = ToggleButton.selected
+    fitness_history = 0
+    count_same_fitness = 0
     rate = 0.1
-    global score1_weight, score2_weight, score3_weight,num_of_mut
+    global score1_weight, score2_weight, score3_weight, num_of_mut
     generations = 1000
     population = create_permutations()
+    progress_bar.start()
     for i in range(generations):
         # Store the calculated fitness score for each individual and the individual.
         global fitness_scores
-        if algo_type == "classic" or i==0:
-            fitness_scores=[]
+        if algo_type == "classic" or i == 0:
+            fitness_scores = []
             for individual in population:
-                total_score=fitness(individual)
+                total_score = fitness(individual)
                 fitness_scores.append((individual, total_score))
 
         # Sort the population by descending fitness score.
-        avg_score=sum(item[1] for item in fitness_scores)/len(fitness_scores)
+        avg_score = sum(item[1] for item in fitness_scores) / len(fitness_scores)
         fitness_scores.sort(key=lambda x: x[1], reverse=True)
-        statistics_per_generation.append((i,fitness_scores[0][1],avg_score,fitness_scores[-1][1]))
+        statistics_per_generation.append((i, fitness_scores[0][1], avg_score, fitness_scores[-1][1]))
 
         if i > 0:
             if algo_type != "classic":
@@ -517,246 +477,183 @@ def decryption_flow(algo_type="classic"):
             fitness_scores.sort(key=lambda x: x[1], reverse=True)
             fitness_scores = [individual for individual in fitness_scores[0:100]]
             population = [individual[0] for individual in fitness_scores]
-        #Print the best solution in the current generation.
-        print("Generation: " + str(i)  + " Fitness score: " + str(
-            fitness_scores[0][1]) + " success percent: " + str(how_close_to_real_dict(fitness_scores[0][0],"enc")))
-        if fitness_scores[0][1]<fitness_history:
+        # Print the best solution in the current generation.
+        print("Generation: " + str(i) + " Fitness score: " + str(
+            fitness_scores[0][1]) + " success percent: " + str(how_close_to_real_dict(fitness_scores[0][0], "enc")))
+        if fitness_scores[0][1] < fitness_history:
             print("Hara")
-        if fitness_history==fitness_scores[0][1]:
-            count_same_fitness+=1
+        if fitness_history == fitness_scores[0][1]:
+            count_same_fitness += 1
         else:
-            count_same_fitness=0
-        fitness_history=fitness_scores[0][1]
-        if count_same_fitness>1:
-            num_of_mut+=1
-        elif count_same_fitness==0 and num_of_mut>1:
-            num_of_mut-=1
-        if count_same_fitness>9:
-            write_solution(fitness_scores[0][0],enc)
+            count_same_fitness = 0
+        fitness_history = fitness_scores[0][1]
+        if count_same_fitness > 1:
+            num_of_mut += 1
+        elif count_same_fitness == 0 and num_of_mut > 1:
+            num_of_mut -= 1
+        if count_same_fitness > 9:
+            progress_bar.stop()
+            #display_solution(individual,i,fitness_calling)
+            write_solution(fitness_scores[0][0], enc)
             return
 
         # Create a list of the top 40-70% individuals of the population - for crossover.
         crossover_list = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.8)]]
         new_crossover_list = biased_crossover_list(crossover_list)
         # Create a list of the top 70-90% of the population - for replication
-        #replication_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.1):int(len(fitness_scores)*0.2)]]
+        # replication_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.1):int(len(fitness_scores)*0.2)]]
         # Create a list of the top 90-100% of the population - elitism.
-        #elitism_list = [individual[0] for individual in fitness_scores[0:int(len(fitness_scores)*0.05)]]
+        # elitism_list = [individual[0] for individual in fitness_scores[0:int(len(fitness_scores)*0.05)]]
 
-        #elitism_to_mutate = copy.deepcopy(elitism_list)
+        # elitism_to_mutate = copy.deepcopy(elitism_list)
         # Reset the population.
         new_population = []
         new_population.extend(population)
-        crossover_to_append=crossover(new_crossover_list,len(new_crossover_list))
+        crossover_to_append = crossover(new_crossover_list, len(new_crossover_list))
         # Create a new population using crossover.
         new_population.extend(crossover_to_append)
 
         # Add the replication list to the new population.
-        #new_population.extend(replication_list)
+        # new_population.extend(replication_list)
         # Mutate the new population.
 
-        #new_population = inversion(new_population, rate)
+        # new_population = inversion(new_population, rate)
         new_population = mutation(new_population, rate)
         new_population.extend(population)
-        #elitism_to_mutate = mutation(elitism_to_mutate, 1)
-        #new_population.extend(elitism_to_mutate)
+        # elitism_to_mutate = mutation(elitism_to_mutate, 1)
+        # new_population.extend(elitism_to_mutate)
         # Add the elitism list to the new population.
-        #new_population.extend(elitism_list)
+        # new_population.extend(elitism_list)
         # Replace the old population with the new population.
         population = copy.deepcopy(new_population)
-        # Keep only the 100 highest individuals to next generation:
-
-
-
-
-
-
-def testing():
-    fitness_history1=0
-    fitness_history2=0
-    fitness_history3=0
-    count_same_fitness1=0
-    count_same_fitness2=0
-    count_same_fitness3=0
-    rate1 = 0.2
-    rate2 = 0.2
-    rate3 = 0.2
-    global score1_weight, score2_weight, score3_weight
-    generations = 1000
-    population1 = create_permutations()
-    population2 = create_permutations()
-    population3 = create_permutations()
-    for i in range(generations):
-        # Adapt the weights of the fitness scores.
-        if i==0:
-            score1_weight = 0.7
-            score2_weight = 0.2
-            score3_weight = 0.1
-        # Store the calculated fitness score for each individual and the individual.
-        fitness_scores1 = []
-        fitness_scores2 = []
-        fitness_scores3 = []
-        for individual1, individual2, individual3 in zip(population1, population2, population3):
-            total_score1=fitness(individual1,test1)
-            success_percent1=how_close_to_real_dict(individual1,"test1")
-            fitness_scores1.append((individual1,success_percent1, total_score1))
-            total_score2=fitness(individual2,test2)
-            success_percent2=how_close_to_real_dict(individual2,"test2")
-            fitness_scores2.append((individual2,success_percent2, total_score2))
-            total_score3=fitness(individual3,enc)
-            success_percent3=how_close_to_real_dict(individual3,"enc")
-            fitness_scores3.append((individual3,success_percent3, total_score3))
-        # Sort the population by descending fitness score.
-        fitness_scores1.sort(key=lambda x: x[2], reverse=True)
-        fitness_scores2.sort(key=lambda x: x[2], reverse=True)
-        fitness_scores3.sort(key=lambda x: x[2], reverse=True)
-        print("TEST1 "+"Generation: " + str(i) + " Fitness score: " + str(fitness_scores1[0][2]) + " success percent: " + str(fitness_scores1[0][1]))
-        print("TEST2 " + "Generation: " + str(i) + " Fitness score: " + str(fitness_scores2[0][2]) + " success percent: " + str(fitness_scores2[0][1]))
-        print("TEST3 "+" Generation: " + str(i) +  " Fitness score: " + str(fitness_scores3[0][2]) + " success percent: " + str(fitness_scores3[0][1]) +"\n\n")
-
-        if (fitness_history1==fitness_scores1[0][2]):
-            count_same_fitness1+=1
-        else:
-            count_same_fitness1=0
-        fitness_history1=fitness_scores1[0][2]
-
-        if count_same_fitness1>=1:
-            if rate1<=0.8:
-                rate1=rate1*1.2
-            # Genetic drift
-            fitness_scores1 = [individual for individual in fitness_scores1[0:int(len(fitness_scores1) * 0.1)]]
-        elif count_same_fitness1==0:
-            rate1=rate1*0.8
-
-        if (fitness_history2==fitness_scores2[0][2]):
-            count_same_fitness2+=1
-        else:
-            count_same_fitness2=0
-        fitness_history2=fitness_scores2[0][2]
-
-        if count_same_fitness2>=1:
-            if rate2<=0.8:
-                rate2=rate2*1.2
-            # Genetic drift
-            fitness_scores2 = [individual for individual in fitness_scores2[0:int(len(fitness_scores2) * 0.1)]]
-        elif count_same_fitness2==0:
-            rate2=rate2*0.8
-
-        if (fitness_history3==fitness_scores3[0][2]):
-            count_same_fitness3+=1
-        else:
-            count_same_fitness3=0
-        fitness_history3=fitness_scores3[0][2]
-
-        if count_same_fitness3>=1:
-            if rate3<=0.8:
-                rate3=rate3*1.2
-            # Genetic drift
-            fitness_scores3 = [individual for individual in fitness_scores3[0:int(len(fitness_scores3) * 0.1)]]
-        elif count_same_fitness3==0:
-            rate3=rate3*0.8
-        
-
-        # Create a list of the top 40-70% individuals of the population - for crossover.
-        test1_crossover_list = [individual[0] for individual in fitness_scores1[0:int(len(fitness_scores1) * 0.3)]]
-        test1_elitism_list = [individual[0] for individual in fitness_scores1[0:int(len(fitness_scores1)*0.1)]]
-        test1_elitism_to_mutate = copy.deepcopy(test1_elitism_list)
-        test2_crossover_list = [individual[0] for individual in fitness_scores2[0:int(len(fitness_scores2) * 0.3)]]
-        test2_elitism_list = [individual[0] for individual in fitness_scores2[0:int(len(fitness_scores2)*0.1)]]
-        test2_elitism_to_mutate = copy.deepcopy(test2_elitism_list)
-        test3_crossover_list = [individual[0] for individual in fitness_scores3[0:int(len(fitness_scores3) * 0.3)]]
-        test3_elitism_list = [individual[0] for individual in fitness_scores3[0:int(len(fitness_scores3)*0.1)]]
-        test3_elitism_to_mutate = copy.deepcopy(test3_elitism_list)
-
-        # Reset the population.
-        population1 = []
-        population2 = []
-        population3 = []
-        new_population1 = []
-        new_population2 = []
-        new_population3 = []
-        # Create a new population using crossover.
-        new_population1 = crossover(test1_crossover_list, population_size)
-        new_population2 = crossover(test2_crossover_list, population_size)
-        new_population3 = crossover(test3_crossover_list, population_size)
-        # Add the replication list to the new population.
-        #new_population.extend(replication_list)
-        # Mutate the new population.
-        new_population1 = inversion(new_population1, rate1)
-        new_population1 = mutation(new_population1, rate1)   
-        test1_elitism_to_mutate = mutation(test1_elitism_to_mutate, 1)
-        new_population1.extend(test1_elitism_to_mutate)
-        # Add the elitism list to the new population.
-        new_population1.extend(test1_elitism_list)
-        # Replace the old population with the new population.
-        population1 = copy.deepcopy(new_population1)
-
-        new_population2 = inversion(new_population2, rate2)
-        new_population2 = mutation(new_population2, rate2)
-        test2_elitism_to_mutate = mutation(test2_elitism_to_mutate, 1)
-        new_population2.extend(test2_elitism_to_mutate)
-        # Add the elitism list to the new population.
-        new_population2.extend(test2_elitism_list)
-        # Replace the old population with the new population.
-        population2 = copy.deepcopy(new_population2)
-
-        new_population3 = inversion(new_population3, rate3)
-        new_population3 = mutation(new_population3, rate3)
-        test3_elitism_to_mutate = mutation(test3_elitism_to_mutate, 1)
-        new_population3.extend(test3_elitism_to_mutate)
-        # Add the elitism list to the new population.
-        new_population3.extend(test3_elitism_list)
-        # Replace the old population with the new population.
-        population3 = copy.deepcopy(new_population3)
 
 
 def create_data(algo_type):
-        n_list = [1,5,7,10]
-        filename="{}.csv".format(algo_type)
-        with open(filename, mode='w', newline='') as file:
-            writer = csv.writer(file)
-            table_headers = ['generation', 'best', 'avg', 'bad']
-            if algo_type != "classic":
+    n_list = [1, 5, 7, 10]
+    filename = "{}.csv".format(algo_type)
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        table_headers = ['generation', 'best', 'avg', 'bad']
+        if algo_type != "classic":
 
-                # Run lamark or darwin algo and save results:
-                global n, statistics_per_generation, fitness_calling,population,fitness_scores,num_of_mut
-                for num in n_list:
-                    n = num
-                    decryption_flow(algo_type)
-                    title = [algo_type + str(n), ' ']
-                    writer.writerow(title)
-                    writer.writerow(table_headers)
-                    for row in statistics_per_generation:
-                        writer.writerow(row)
-                    writer.writerow([])
-                    statistics_per_generation = []
-                    title = [algo_type + str(n) + ' ' + 'fitness_calling: ' + str(fitness_calling)]
-                    writer.writerow(title)
-                    writer.writerow([])
-                    fitness_calling = 0
-                    population=[]
-                    fitness_scores=[]
-                    num_of_mut=1
-            else:
-                # Run classic algo:
-                decryption_flow()
-                title = ['classic:', ' ']
+            # Run lamark or darwin algo and save results:
+            global n, statistics_per_generation, fitness_calling, population, fitness_scores, num_of_mut
+            for num in n_list:
+                n = num
+                decryption_flow(algo_type)
+                title = [algo_type + str(n), ' ']
                 writer.writerow(title)
                 writer.writerow(table_headers)
                 for row in statistics_per_generation:
                     writer.writerow(row)
                 writer.writerow([])
                 statistics_per_generation = []
-                title = ['classic:' + 'fitness_calling: ' + str(fitness_calling)]
+                title = [algo_type + str(n) + ' ' + 'fitness_calling: ' + str(fitness_calling)]
                 writer.writerow(title)
                 writer.writerow([])
                 fitness_calling = 0
+                population = []
+                fitness_scores = []
+                num_of_mut = 1
+        else:
+            # Run classic algo:
+            decryption_flow()
+            title = ['classic:', ' ']
+            writer.writerow(title)
+            writer.writerow(table_headers)
+            for row in statistics_per_generation:
+                writer.writerow(row)
+            writer.writerow([])
+            statistics_per_generation = []
+            title = ['classic:' + 'fitness_calling: ' + str(fitness_calling)]
+            writer.writerow(title)
+            writer.writerow([])
+            fitness_calling = 0
 
+def start_decryption():
+    progress_frame.place(x=50, y=275)  # place frame under the start button
+    progress_bar.start()
+    progress_label.config(text="Decrypting the text...")
+    thread = threading.Thread(target=decryption_flow)
+    thread.start()
 
-def plot_data():
-    pass
+# This class implement a tk button and manage color changing and keeping track of which buttin is pressed.
+class ToggleButton(tk.Button):
+    selected = 'classic'
+    def __init__(self, *args, **kwargs):
+        self.algorithm = kwargs.pop('algorithm', None)
+        super().__init__(*args, **kwargs)
+        self.bind("<Button-1>", self.toggle)
 
-create_data("darwin")
+    def toggle(self, event):
+        for button in self.master.winfo_children():
+            if isinstance(button, ToggleButton):
+                button.config(bg='black', fg='lightgrey')
+        self.config(bg='green', fg='white')
+        ToggleButton.selected = self.algorithm
 
-#decryption_flow()
-#testing()
+# GUI implementation
+def display_solution(solution_dict, num_generations, num_fitness_calls):
+    # Convert the solution_dict to a string representation for display
+    solution_text = '\n'.join(f'{k}: {v}' for k, v in solution_dict.items())
+
+    # Destroy previous widgets
+    progress_frame.destroy()
+    algorithm_frame.destroy()
+    start_button.destroy()
+
+    # Create labels for the solution and statistics
+    solution_label = tk.Label(root, text=f'Solution:\n{solution_text}', font=('Courier New', 10), fg='lightgrey', bg='black')
+    generations_label = tk.Label(root, text=f'Number of Generations: {num_generations}', font=('Courier New', 10), fg='lightgrey', bg='black')
+    fitness_calls_label = tk.Label(root, text=f'Number of Fitness Calls: {num_fitness_calls}', font=('Courier New', 10), fg='lightgrey', bg='black')
+
+    # Place the labels on the screen
+    solution_label.grid(row=4, column=0, pady=10)
+    generations_label.grid(row=5, column=0, pady=10)
+    fitness_calls_label.grid(row=6, column=0, pady=10)
+
+# Create the main window
+root = tk.Tk()
+root.geometry("301x320")
+root.title('Text Decryptions System')
+root.configure(bg='black')
+
+# A variable that will be assigned by the algo buttons.
+algorithm = tk.StringVar(value='classic')
+
+# Create the titles on the screen
+title_label = tk.Label(root, text="Text Decryption System", font=('Courier New', 16, 'bold'), fg='lightgrey', bg='black')
+sub_title_label = tk.Label(root, text="Genetic Algorithm Powered", font=('Courier New', 12), fg='lightgrey', bg='black')
+choose_algorithm_label = tk.Label(root, text="Choose the algorithm:", font=('Courier New', 14), fg='lightgrey', bg='black')
+
+algorithm_frame = tk.Frame(root, bg='black')
+
+# Creates the algorigm buttons
+classic_button = ToggleButton(algorithm_frame, text="Classic", font=('Courier New', 10), bg='black', fg='lightgrey', algorithm='classic')
+darwin_button = ToggleButton(algorithm_frame, text="Darwin", font=('Courier New', 10), bg='black', fg='lightgrey', algorithm='darwin')
+lamark_button = ToggleButton(algorithm_frame, text="Lamark", font=('Courier New', 10), bg='black', fg='lightgrey', algorithm='lamark')
+
+# Align the buttons on the screen.
+classic_button.grid(row=0, column=0)
+darwin_button.grid(row=0, column=1)
+lamark_button.grid(row=0, column=2)
+start_button = tk.Button(root, text="Start", command=start_decryption, font=('Courier New', 12), bg='blue', fg='white')
+
+# Create a Frame to hold the progress bar and label
+progress_frame = tk.Frame(root, bg='black')
+
+# Create a progress bar and label initially hidden and will appear only when the algorithm starts.
+progress_bar = ttk.Progressbar(progress_frame, length=200, mode='indeterminate')
+progress_label = tk.Label(progress_frame, text="", font=('Courier New', 10), fg='lightgrey', bg='black')
+
+progress_bar.pack()
+progress_label.pack()
+
+# Place all the labels on the screen
+title_label.grid(row=0, column=0, pady=20)
+sub_title_label.grid(row=1, column=0, pady=10)
+choose_algorithm_label.grid(row=2, column=0, pady=20)
+algorithm_frame.grid(row=3, column=0, pady=5)
+start_button.grid(row=6, column=0, pady=20)
+
+root.mainloop()
