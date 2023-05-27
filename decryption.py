@@ -420,26 +420,35 @@ def check_stop(generation, fitness):
 
 
 # This function writes the solution and the decrypted file to the files.
-def write_solution(individual, enc):
+def write_solution(individual):
     # Write the dictionary to a file called perm.txt.
     with open("perm.txt", "w") as file:
         for letter, value in individual.items():
             file.write(letter + " " + value + "\n")
+
+    # Read the encrypted text from the file
+    with open("enc.txt", "r") as file:
+        enc = [line.strip().split() for line in file]
+
     # Decrypt the text using the solution.
     decrypted_text = []
-    for word in enc:
-        dec_word = ""
-        for letter in word:
-            try:
-                dec_word += individual[letter]
-            except KeyError:
-                # Special letter case.
-                dec_word += letter
-        decrypted_text.append(dec_word)
+    for line in enc:
+        dec_line = []
+        for word in line:
+            dec_word = ""
+            for letter in word:
+                try:
+                    dec_word += individual[letter]
+                except KeyError:
+                    # Special letter case.
+                    dec_word += letter
+            dec_line.append(dec_word)
+        decrypted_text.append(' '.join(dec_line))
+
     # Write the decrypted_text to plain.txt.
     with open("plain.txt", "w") as file:
-        for word in decrypted_text:
-            file.write(word + " ")
+        for line in decrypted_text:
+            file.write(line + "\n")
 
 
 # This function handles the flow of the # algorithm.
@@ -493,8 +502,8 @@ def decryption_flow():
             num_of_mut -= 1
         if count_same_fitness > 9:
             progress_bar.stop()
-            #display_solution(individual,i,fitness_calling)
-            write_solution(fitness_scores[0][0], enc)
+            write_solution(fitness_scores[0][0])
+            display_solution(individual,i,fitness_calling)
             return
 
         # Create a list of the top 40-70% individuals of the population - for crossover.
@@ -595,22 +604,47 @@ class ToggleButton(tk.Button):
 # GUI implementation
 def display_solution(solution_dict, num_generations, num_fitness_calls):
     # Convert the solution_dict to a string representation for display
-    solution_text = '\n'.join(f'{k}: {v}' for k, v in solution_dict.items())
+    add_to_solution_text = "Solution:\n"
+    solution_text = ', '.join(f'{k}->{v}' for k, v in solution_dict.items())
 
-    # Destroy previous widgets
-    progress_frame.destroy()
-    algorithm_frame.destroy()
-    start_button.destroy()
+    solution_text = add_to_solution_text + solution_text
+    # Read decrypted text from plain.txt
+    with open("plain.txt", "r") as file:
+        decrypted_text = file.read()
+
+    # Create new window
+    new_window = tk.Toplevel(root)
+    new_window.title("Decryption Results")
+    new_window.configure(bg='black')
 
     # Create labels for the solution and statistics
-    solution_label = tk.Label(root, text=f'Solution:\n{solution_text}', font=('Courier New', 10), fg='lightgrey', bg='black')
-    generations_label = tk.Label(root, text=f'Number of Generations: {num_generations}', font=('Courier New', 10), fg='lightgrey', bg='black')
-    fitness_calls_label = tk.Label(root, text=f'Number of Fitness Calls: {num_fitness_calls}', font=('Courier New', 10), fg='lightgrey', bg='black')
+    solution_label = tk.Label(new_window, text=f'{solution_text}', font=('Courier New', 10), fg='lightgrey',
+                              bg='black', wraplength=500)
+    generations_label = tk.Label(new_window, text=f'Number of Generations: {num_generations}', font=('Courier New', 10),
+                                 fg='lightgrey', bg='black')
+    fitness_calls_label = tk.Label(new_window, text=f'Number of Fitness Calls: {num_fitness_calls}',
+                                   font=('Courier New', 10), fg='lightgrey', bg='black')
 
-    # Place the labels on the screen
-    solution_label.grid(row=4, column=0, pady=10)
-    generations_label.grid(row=5, column=0, pady=10)
-    fitness_calls_label.grid(row=6, column=0, pady=10)
+    # Create scrollable text box for the decrypted text
+    decrypted_text_box = tk.Text(new_window, font=('Courier New', 10), fg='lightgrey', bg='black', wrap="word")
+    decrypted_text_box.insert(tk.END, f'Decrypted text:\n{decrypted_text}')
+    decrypted_text_box.configure(state='disabled')  # Make it read-only
+
+    # Create a scrollbar and attach it to the text box
+    scrollbar = tk.Scrollbar(new_window, command=decrypted_text_box.yview)
+    decrypted_text_box['yscrollcommand'] = scrollbar.set
+
+    # Place the labels and text box on the screen
+    solution_label.grid(row=2, column=0, sticky='w', pady=10)
+    generations_label.grid(row=0, column=0, sticky='w', pady=10)
+    fitness_calls_label.grid(row=1, column=0, sticky='w', pady=10)
+    decrypted_text_box.grid(row=3, column=0, sticky='nsew')
+    scrollbar.grid(row=3, column=1, sticky='ns')
+
+    # Configure grid to allow text box to expand
+    new_window.grid_columnconfigure(0, weight=1)
+    new_window.grid_rowconfigure(3, weight=1)
+
 
 # Create the main window
 root = tk.Tk()
