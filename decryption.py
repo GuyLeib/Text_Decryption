@@ -15,7 +15,9 @@ score3_weight = 0.2
 num_of_mut=1
 population=[]
 statistics_per_generation=[]
+fitness_scores=[]
 n=1
+fitness_calling=0
 ###################### IMPORTANT ###########################
 # check if need a more relative path. 
 
@@ -348,7 +350,8 @@ def common_bigrams_score(decrypted_text):
 
 # This function calculate the fitness score of a given individual = solution. 
 def fitness(individual,enc=enc):
-    global score1_weight, score2_weight, score3_weight   
+    global score1_weight, score2_weight, score3_weight ,fitness_calling
+    fitness_calling+=1
     # Create the new text using the solution.
     decrypted_text = []
     for word in enc:
@@ -501,16 +504,24 @@ def decryption_flow(algo_type="classic"):
                 fitness_scores.append((individual, total_score))
 
         # Sort the population by descending fitness score.
-        avg_score=sum(item[1] for item in fitness_scores)/len(fitness_scores[1])
+        avg_score=sum(item[1] for item in fitness_scores)/len(fitness_scores)
         fitness_scores.sort(key=lambda x: x[1], reverse=True)
-        statistics_per_generation.append((fitness_scores[0][1],avg_score,fitness_scores[-1][1]))
+        statistics_per_generation.append((i,fitness_scores[0][1],avg_score,fitness_scores[-1][1]))
+
         if i > 0:
-            # Keep only the 100 highest individuals to next generation:
+            if algo_type != "classic":
+                # perform local optimization:
+                global n
+                local_optimization(n, algo_type)
+                # Keep only the 100 highest individuals to next generation:
+            fitness_scores.sort(key=lambda x: x[1], reverse=True)
             fitness_scores = [individual for individual in fitness_scores[0:100]]
-            population=[individual[0] for individual in fitness_scores]
-        # Print the best solution in the current generation.
+            population = [individual[0] for individual in fitness_scores]
+        #Print the best solution in the current generation.
         print("Generation: " + str(i)  + " Fitness score: " + str(
             fitness_scores[0][1]) + " success percent: " + str(how_close_to_real_dict(fitness_scores[0][0],"enc")))
+        if fitness_scores[0][1]<fitness_history:
+            print("Hara")
         if fitness_history==fitness_scores[0][1]:
             count_same_fitness+=1
         else:
@@ -520,9 +531,9 @@ def decryption_flow(algo_type="classic"):
             num_of_mut+=1
         elif count_same_fitness==0 and num_of_mut>1:
             num_of_mut-=1
-        if count_same_fitness>5:
+        if count_same_fitness>9:
             write_solution(fitness_scores[0][0],enc)
-            exit(1)
+            return
 
         # Create a list of the top 40-70% individuals of the population - for crossover.
         crossover_list = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.8)]]
@@ -553,10 +564,10 @@ def decryption_flow(algo_type="classic"):
         #new_population.extend(elitism_list)
         # Replace the old population with the new population.
         population = copy.deepcopy(new_population)
-        if algo_type!="classic":
-            # perform local optimization:
-            global n
-            local_optimization(n,algo_type)
+        # Keep only the 100 highest individuals to next generation:
+
+
+
 
 
 
@@ -699,32 +710,53 @@ def testing():
         population3 = copy.deepcopy(new_population3)
 
 
-def comapre_algos():
-    n_list = [1, 5, 10, 15]
-    with open('data.csv', mode='w', newline='') as file:
-        writer = csv.writer(file)
-        table_headers = ['generation', 'best', 'avg', 'bad']
-    # run lamark algo and save results:
-    global n,statistics_per_generation
-    for num in n_list:
-        n=num
-        decryption_flow("lamark")
-        title = ['lamark:' + str(n), ' ']
-        writer.writerow(title)
-        writer.writerow(table_headers)
-        for row in statistics_per_generation:
-            writer.writerow(row)
-        writer.writerow([])
-    statistics_per_generation=[]
-    # run darwin algo and save results:
-    for num in n_list:
-        n=num
-        decryption_flow("darwin")
+def create_data(algo_type):
+        n_list = [1,5,7,10]
+        filename="{}.csv".format(algo_type)
+        with open(filename, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            table_headers = ['generation', 'best', 'avg', 'bad']
+            if algo_type != "classic":
+
+                # Run lamark or darwin algo and save results:
+                global n, statistics_per_generation, fitness_calling,population,fitness_scores,num_of_mut
+                for num in n_list:
+                    n = num
+                    decryption_flow(algo_type)
+                    title = [algo_type + str(n), ' ']
+                    writer.writerow(title)
+                    writer.writerow(table_headers)
+                    for row in statistics_per_generation:
+                        writer.writerow(row)
+                    writer.writerow([])
+                    statistics_per_generation = []
+                    title = [algo_type + str(n) + ' ' + 'fitness_calling: ' + str(fitness_calling)]
+                    writer.writerow(title)
+                    writer.writerow([])
+                    fitness_calling = 0
+                    population=[]
+                    fitness_scores=[]
+                    num_of_mut=1
+            else:
+                # Run classic algo:
+                decryption_flow()
+                title = ['classic:', ' ']
+                writer.writerow(title)
+                writer.writerow(table_headers)
+                for row in statistics_per_generation:
+                    writer.writerow(row)
+                writer.writerow([])
+                statistics_per_generation = []
+                title = ['classic:' + 'fitness_calling: ' + str(fitness_calling)]
+                writer.writerow(title)
+                writer.writerow([])
+                fitness_calling = 0
 
 
+def plot_data():
+    pass
 
+create_data("darwin")
 
-
-
-decryption_flow("darwin")
+#decryption_flow()
 #testing()
