@@ -492,8 +492,8 @@ def decryption_flow():
     fitness_history = 0
     count_same_fitness = 0
     rate = 0.1
-    global score1_weight, score2_weight, score3_weight, num_of_mut
-    generations = 1000
+    global score1_weight, score2_weight, score3_weight, num_of_mut,fitness_calling
+    generations = 200
     population = create_permutations()
     best_solution = {}
     progress_bar.start()
@@ -541,6 +541,8 @@ def decryption_flow():
             progress_label.pack_forget()
             write_solution(fitness_scores[0][0])
             display_solution(individual,i,fitness_calling)
+            num_of_mut=1
+            fitness_calling=0
             return
 
             # create a biased list for crossover:
