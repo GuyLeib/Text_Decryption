@@ -16,7 +16,7 @@ The genetic algorithm used here comes in three versions: Classic, Lamark, and Da
 5. Once the program achieves the solution the solution screen will pop:
 <img width="850" alt="image" src="https://github.com/GuyLeib/Genetic_Algorithms_EX2/assets/90501635/6356cc47-e038-486e-8f40-87b4f7a3f07d"> 
 
-In this screen you can see the the decrypted text and some statistics about the algorithm's performance (number of generations and number of fitness function calls)
+In this screen you can see what substitutions should be made to decrypt the text,the decrypted text and some statistics about the algorithm's performance (number of generations and number of fitness function calls)
 
 ## Data Files
 
