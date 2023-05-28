@@ -25,7 +25,7 @@ fitness_calling = 0
 algo_type="classic"
 
 
-# This function creates all the possible permutations of the cipher:
+'''This function creates all the possible permutations of the cipher.'''
 def create_permutations():
     # create a list of dictionaries:
     permutations = []
@@ -42,20 +42,26 @@ def create_permutations():
     return permutations
 
 
+
+''' This function gets a list of dictionary and rate and performs an
+ inversion operation on the dictionaries within the list based on the given rate.'''
 def inversion(dict_list, rate):
     global letters
 
     for dictionary in dict_list:
         if random.random() <= rate:
-            # choose 2 random letters:
+            # choose 2 random letters (excluding 'x', 'y', and 'z'):
             letter_1 = random.choice(letters)
             while letter_1 == 'x' or letter_1 == 'y' or letter_1 == 'z':
                 letter_1 = random.choice(letters)
+            # Find the index of the first letter in the 'letters' sequence:
             index = letters.index(letter_1)
             # swap values between 2 keys:
+            # Swap values of letters[index] and letters[index + 3]:
             temp = dictionary[letters[index]]
             dictionary[letters[index]] = dictionary[letters[index + 3]]
             dictionary[letters[index + 3]] = temp
+            # Swap values of letters[index + 1] and letters[index + 2]
             temp = dictionary[letters[index + 1]]
             dictionary[letters[index + 1]] = dictionary[letters[index + 2]]
             dictionary[letters[index + 2]] = temp
@@ -63,6 +69,8 @@ def inversion(dict_list, rate):
     return dict_list
 
 
+''' This function takes in a list of dictionaries and a rate and performs a mutation 
+operation on a portion of the dictionaries within the list based on the given rate. '''
 def mutation(dict_list, rate):
     global letters
     global num_of_mut
@@ -81,16 +89,20 @@ def mutation(dict_list, rate):
                 dictionary[letter_2] = temp
     return dict_list
 
-
+'''This function gets n (number) and algo_type and perform n local optiomaztions.
+  if the algo is "lamark" the function will keep both improved fitness and improved individual
+  if algo is "Darwin" the function will keep only improved fitness. '''
 def local_optimization(n, algo_type):
     global letters
     global population
     global fitness_scores
     new_population = []
     new_fitness_scores = []
+    # Iterate over each individual in the population
     for individual in population:
         new_individual = copy.deepcopy(individual)
         new_fitness = 0
+        # Perform  n local optimization on the individual:
         for i in range(n):
             # choose 2 random letters:
             letter_1 = random.choice(letters)
@@ -101,40 +113,56 @@ def local_optimization(n, algo_type):
             temp = individual[letter_1]
             new_individual[letter_1] = new_individual[letter_2]
             new_individual[letter_2] = temp
+            # Compute fitness scores for old and new individuals
             old_fitness = fitness(individual)
             new_fitness = fitness(new_individual)
+            # Check if the new individual's fitness is better than the old individual:
             if new_fitness < old_fitness:
                 new_individual = copy.deepcopy(individual)
                 new_fitness = old_fitness
         if algo_type == "lamark":
+            # in "Lamark", append the new individual and its fitness score to the new population:
             new_population.append(new_individual)
             new_fitness_scores.append((new_individual, new_fitness))
         else:
+            # in "Darwin", append the only the new fitness score:
             new_population.append(individual)
             new_fitness_scores.append((individual, new_fitness))
     fitness_scores = copy.deepcopy(new_fitness_scores)
     population = copy.deepcopy(new_population)
 
 
+'''
+This function checks if there are duplicated letters in the dict and if so it randomly replace them .
+'''
 def replace_dup(dictionary):
     updated_dict = {}
     encountered_values = set()
+    # Iterate over each key-value pair in the dictionary
     for key, value in dictionary.items():
+        # Value encountered previously, need to replace it:
         if value in encountered_values:
             available_letters = string.ascii_lowercase
             used_letters = set(value.lower() for value in updated_dict.values())
             unused_letters = [letter for letter in available_letters if letter not in used_letters]
+            # Check if there are unused letters available:
             if unused_letters:
                 new_letter = random.choice(unused_letters)
                 new_value = new_letter
                 updated_dict[key] = new_value
                 encountered_values.add(new_value)
         else:
+            # Unique value encountered, add it to the updated dictionary:
             updated_dict[key] = value
             encountered_values.add(value)
     return updated_dict
 
 
+
+'''
+This function performs crossover between random parents individuals from a
+ given dictionary list to generate a desired number of offspring.
+'''
 def crossover(dict_list, next_gen_size):
     # create a new list of dictionaries
     crossover_results_list = []
@@ -174,9 +202,9 @@ def crossover(dict_list, next_gen_size):
 
     return crossover_results_list
 
-
-
-# This function import and organize the helper files.
+''' 
+This function imports and organizes the helper files.
+'''
 def import_helper_files():
     common_words = open("dict.txt", "r").read().split("\n")
     # Filter empty lines
@@ -204,7 +232,7 @@ def import_helper_files():
         text = file.read()
         # split the text into words
     enc = text.split()
-    with open('enc.txt', 'r') as file:
+    with open('test1enc.txt', 'r') as file:
         text = file.read()
         # split the text into words
     test1 = text.split()
@@ -219,7 +247,9 @@ def import_helper_files():
 common_words, common_letters_dict, common_bigrams_dict, enc, test1, test2 = import_helper_files()
 
 
-# This function calculate a score based on how many common words are in the solution.
+'''
+ This function calculate a score based on how many common words are in the solution.
+ '''
 def common_words_score(decrypted_text):
     # Create the new text using the solution.
     total_words = len(decrypted_text)
@@ -233,7 +263,9 @@ def common_words_score(decrypted_text):
     return score
 
 
-# This function calculate a score based on how many common letters are in the solution.
+'''
+This function calculate a score based on how many common letters are in the solution.
+'''
 def common_letters_score(decrypted_text):
     # Calculate each letter frequency in the text.
     letter_freq = {}
@@ -263,7 +295,9 @@ def common_letters_score(decrypted_text):
     return score
 
 
-# This function calculate a score based on how many common bigrams are in the solution.
+'''
+ This function calculate a score based on how many common bigrams are in the solution.
+'''
 def common_bigrams_score(decrypted_text):
     # Calculate each bigram frequency in the text.
     bigram_freq = {}
@@ -301,7 +335,10 @@ def common_bigrams_score(decrypted_text):
     return score
 
 
-# This function calculate the fitness score of a given individual = solution.
+
+'''
+ This function calculate the fitness score of a given individual = solution.
+ '''
 def fitness(individual, enc=enc):
     global score1_weight, score2_weight, score3_weight, fitness_calling
     fitness_calling += 1
@@ -399,9 +436,10 @@ def how_close_to_real_dict(dict, test):
             same += 1
     return same / 26
 
-
+'''
+This function performs biased selection of individuals from a crossover list based on their scores.
+'''
 def biased_crossover_list(crossover_list):
-    total_score_sum = sum(score[1] for score in crossover_list)
     new_list = []
     for individual in fitness_scores:
         relative_score = (math.ceil(individual[1] * 10)) + 1
@@ -410,16 +448,9 @@ def biased_crossover_list(crossover_list):
     return new_list
 
 
-# This function checks if the algorithm should stop.
-def check_stop(generation, fitness):
-    if generation > 70 and fitness > 0.86:
-        return True
-    if fitness > 0.91:
-        return True
-    return False
-
-
-# This function writes the solution and the decrypted file to the files.
+'''
+This function writes the solution and the decrypted file to the files.
+'''
 def write_solution(individual):
     # Write the dictionary to a file called perm.txt.
     with open("perm.txt", "w") as file:
@@ -451,7 +482,9 @@ def write_solution(individual):
             file.write(line + "\n")
 
 
-# This function handles the flow of the # algorithm.
+'''
+This function handles the flow of the  algorithm.
+'''
 def decryption_flow():
     global population
     global algo_type
@@ -462,6 +495,7 @@ def decryption_flow():
     global score1_weight, score2_weight, score3_weight, num_of_mut
     generations = 1000
     population = create_permutations()
+    best_solution = {}
     progress_bar.start()
     for i in range(generations):
         # Store the calculated fitness score for each individual and the individual.
@@ -509,33 +543,21 @@ def decryption_flow():
             display_solution(individual,i,fitness_calling)
             return
 
-        # Create a list of the top 40-70% individuals of the population - for crossover.
+            # create a biased list for crossover:
         crossover_list = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.8)]]
         new_crossover_list = biased_crossover_list(crossover_list)
-        # Create a list of the top 70-90% of the population - for replication
-        # replication_list = [individual[0] for individual in fitness_scores[int(len(fitness_scores)*0.1):int(len(fitness_scores)*0.2)]]
-        # Create a list of the top 90-100% of the population - elitism.
-        # elitism_list = [individual[0] for individual in fitness_scores[0:int(len(fitness_scores)*0.05)]]
-
-        # elitism_to_mutate = copy.deepcopy(elitism_list)
-        # Reset the population.
+        # Reset the  new population.
         new_population = []
+        # add the old population to the new pop:
         new_population.extend(population)
+        # Create  new offsprings using crossover.
         crossover_to_append = crossover(new_crossover_list, len(new_crossover_list))
-        # Create a new population using crossover.
+        # add the offsprings to the new pop:
         new_population.extend(crossover_to_append)
-
-        # Add the replication list to the new population.
-        # new_population.extend(replication_list)
-        # Mutate the new population.
-
-        # new_population = inversion(new_population, rate)
+        # perform mutations on the new population:
         new_population = mutation(new_population, rate)
+        # add the old population to the new pop in order to save solutions:
         new_population.extend(population)
-        # elitism_to_mutate = mutation(elitism_to_mutate, 1)
-        # new_population.extend(elitism_to_mutate)
-        # Add the elitism list to the new population.
-        # new_population.extend(elitism_list)
         # Replace the old population with the new population.
         population = copy.deepcopy(new_population)
 
