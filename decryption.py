@@ -502,6 +502,9 @@ def decryption_flow():
             num_of_mut -= 1
         if count_same_fitness > 9:
             progress_bar.stop()
+            progress_label.config(text="Decryption completed.")
+            progress_bar.pack_forget()
+            progress_label.pack_forget()
             write_solution(fitness_scores[0][0])
             display_solution(individual,i,fitness_calling)
             return
@@ -583,7 +586,10 @@ def start_decryption():
     progress_frame.place(x=50, y=275)  # place frame under the start button
     progress_bar.start()
     progress_label.config(text="Decrypting the text...")
+    progress_bar.pack()
+    progress_label.pack()
     thread = threading.Thread(target=decryption_flow)
+    thread.daemon = True
     thread.start()
 
 # This class implement a tk button and manage color changing and keeping track of which buttin is pressed.
