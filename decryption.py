@@ -365,77 +365,6 @@ def fitness(individual, enc=enc):
     return total_score
 
 
-def how_close_to_real_dict(dict, test):
-    if test == "test1":
-        solution = {
-            'a': 'q',
-            'b': 'w',
-            'c': 'e',
-            'd': 'r',
-            'e': 't',
-            'f': 'y',
-            'g': 'u',
-            'h': 'i',
-            'i': 'o',
-            'j': 'p',
-            'k': 'a',
-            'l': 's',
-            'm': 'd',
-            'n': 'f',
-            'o': 'g',
-            'p': 'h',
-            'q': 'k',
-            'r': 'j',
-            's': 'l',
-            't': 'z',
-            'u': 'x',
-            'v': 'c',
-            'w': 'v',
-            'x': 'b',
-            'y': 'n',
-            'z': 'm'
-        }
-
-    elif test == "test2":
-        solution = {
-            'a': 'q',
-            'b': 'w',
-            'c': 'e',
-            'd': 'r',
-            'e': 't',
-            'f': 'y',
-            'g': 'u',
-            'h': 'i',
-            'i': 'o',
-            'j': 'p',
-            'k': 'a',
-            'l': 's',
-            'm': 'd',
-            'n': 'f',
-            'o': 'g',
-            'p': 'h',
-            'q': 'j',
-            'r': 'k',
-            's': 'l',
-            't': 'z',
-            'u': 'x',
-            'v': 'c',
-            'w': 'v',
-            'x': 'b',
-            'y': 'n',
-            'z': 'm'
-        }
-
-    else:
-        solution = {'a': 'y', 'b': 'x', 'c': 'i', 'd': 'n', 'e': 't', 'f': 'o', 'g': 'z', 'h': 'j', 'i': 'c', 'j': 'e',
-                    'k': 'b', 'l': 'l', 'm': 'd', 'n': 'u', 'o': 'k', 'p': 'm', 'q': 's', 'r': 'v', 's': 'p', 't': 'q',
-                    'u': 'r', 'v': 'h', 'w': 'w', 'x': 'g', 'y': 'a', 'z': 'f'}
-    same = 0
-    for key in dict.keys():
-        if dict[key] == solution[key]:
-            same += 1
-    return same / 26
-
 '''
 This function performs biased selection of individuals from a crossover list based on their scores.
 '''
@@ -512,19 +441,16 @@ def decryption_flow():
         statistics_per_generation.append((i, fitness_scores[0][1], avg_score, fitness_scores[-1][1]))
 
         if i > 0:
+            # for lamarak or darwin:
             if algo_type != "classic":
                 # perform local optimization:
                 global n
                 local_optimization(n, algo_type)
-                # Keep only the 100 highest individuals to next generation:
+            # Keep only the 100 highest individuals to next generation:
             fitness_scores.sort(key=lambda x: x[1], reverse=True)
             fitness_scores = [individual for individual in fitness_scores[0:100]]
             population = [individual[0] for individual in fitness_scores]
-        # Print the best solution in the current generation.
-        print("Generation: " + str(i) + " Fitness score: " + str(
-            fitness_scores[0][1]) + " success percent: " + str(how_close_to_real_dict(fitness_scores[0][0], "enc")))
-        if fitness_scores[0][1] < fitness_history:
-            print("Hara")
+        # check if there is local  convergence and handle it:
         if fitness_history == fitness_scores[0][1]:
             count_same_fitness += 1
         else:
@@ -532,8 +458,10 @@ def decryption_flow():
         fitness_history = fitness_scores[0][1]
         if count_same_fitness > 1:
             num_of_mut += 1
+        # danger for convergence is over:
         elif count_same_fitness == 0 and num_of_mut > 1:
             num_of_mut -= 1
+        # found a solution:
         if count_same_fitness > 9:
             progress_bar.stop()
             progress_label.config(text="Decryption completed.")
@@ -545,7 +473,7 @@ def decryption_flow():
             fitness_calling=0
             return
 
-            # create a biased list for crossover:
+        # create a biased list for crossover:
         crossover_list = [individual for individual in fitness_scores[0:int(len(fitness_scores) * 0.8)]]
         new_crossover_list = biased_crossover_list(crossover_list)
         # Reset the  new population.
