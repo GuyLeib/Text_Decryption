@@ -232,19 +232,11 @@ def import_helper_files():
         text = file.read()
         # split the text into words
     enc = text.split()
-    with open('test1enc.txt', 'r') as file:
-        text = file.read()
-        # split the text into words
-    test1 = text.split()
-    with open('test2enc.txt', 'r') as file:
-        text = file.read()
-        # split the text into words
-    test2 = text.split()
-    return common_words, common_letters_dict, common_bigrams_dict, enc, test1, test2
+    return common_words, common_letters_dict, common_bigrams_dict, enc
 
 
 # Import the helper files.
-common_words, common_letters_dict, common_bigrams_dict, enc, test1, test2 = import_helper_files()
+common_words, common_letters_dict, common_bigrams_dict, enc = import_helper_files()
 
 
 '''
@@ -462,7 +454,7 @@ def decryption_flow():
         elif count_same_fitness == 0 and num_of_mut > 1:
             num_of_mut -= 1
         # found a solution:
-        if count_same_fitness > 9:
+        if count_same_fitness > 9 or i == 199:
             progress_bar.stop()
             progress_label.config(text="Decryption completed.")
             progress_bar.pack_forget()
@@ -540,6 +532,7 @@ def start_decryption():
     progress_label.config(text="Decrypting the text...")
     progress_bar.pack()
     progress_label.pack()
+    # Uses another thread to be able to update the GUI.
     thread = threading.Thread(target=decryption_flow)
     thread.daemon = True
     thread.start()
@@ -607,7 +600,7 @@ def display_solution(solution_dict, num_generations, num_fitness_calls):
 # Create the main window
 root = tk.Tk()
 root.geometry("301x320")
-root.title('Text Decryptions System')
+root.title('Text Decryption System')
 root.configure(bg='black')
 
 # A variable that will be assigned by the algo buttons.
