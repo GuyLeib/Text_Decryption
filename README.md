@@ -2,6 +2,8 @@
 This repository contains a Graphical User Interface (GUI) implementation of a text decryption system powered by a genetic algorithm.
 The genetic algorithm used here comes in three versions: Classic, Lamark, and Darwin.
 
+`Note:` Running the algorithm can take between 5 to 10 minutes, go grab coffee while waiting.
+
 ## How To Use
 1. Download the decryption.exe file and locate it at the same directory as the Data Files* and enc.txt which is the text you want to decrypt.
 2. Double click on the exe file the following screen will pop:
@@ -18,8 +20,6 @@ The genetic algorithm used here comes in three versions: Classic, Lamark, and Da
 
 In this screen you can see what substitutions should be made to decrypt the text,the decrypted text and some statistics about the algorithm's performance (number of generations and number of fitness function calls).
 The decrypted text will also be saved to `plain.txt` and the dictionary solution will be saved to `perm.txt`. 
-
-`Note:` Running the algorithm can take between 5 to 10 minutes, go grab coffee while waiting.
 
 ## Data Files
 
